@@ -1,0 +1,9 @@
+import { ChannelId, MessageId, UserId } from "./ids";
+
+export interface ChatMessage {
+  id: MessageId;
+  channel_id: ChannelId;
+  author_id: UserId;
+  content: string;
+  timestamp: string;
+}

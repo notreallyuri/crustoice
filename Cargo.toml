@@ -1,0 +1,8 @@
+[workspace]
+members = ["apps/server", "apps/desktop/src-tauri", "packages/shared", "migration"]
+resolver = "2"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+uuid = { version = "1.20.0", features = ["v4", "serde"] }
+chrono = { version = "0.4.43", features = ["serde"] }

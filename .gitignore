@@ -1,0 +1,23 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Environment Variables (CRITICAL SECURITY)
+.env
+*.env
+
+# Docker / Database Data (If you map volumes locally)
+postgres_data/
+redis_data/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Tauri
+**/node_modules/
