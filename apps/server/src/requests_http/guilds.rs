@@ -1,12 +1,18 @@
-use crate::state::SharedState;
+use std::arch::x86_64::_mm_pause;
+
+use crate::entities::{channels, guilds, prelude::*};
+use crate::services::jwt::verify_token;
+use crate::{entities::guild_members, state::SharedState};
+use axum::http::HeaderMap;
 use axum::{
     Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
 };
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use shared::{
-    requests::{AddMemberPayLoad, CreateGuildRequest},
+    requests::CreateGuildRequest,
     structures::{ChannelId, Guild, GuildId, MessageChannel, UserId},
 };
 use uuid::Uuid;
@@ -14,110 +20,148 @@ use uuid::Uuid;
 pub async fn get_guilds(
     State(state): State<SharedState>,
     Path(user_id): Path<UserId>,
-) -> impl IntoResponse {
-    let state = state.lock().await;
+) -> Result<Json<Vec<Guild>>, (StatusCode, String)> {
+    let db = { state.lock().await.db.clone() };
 
-    let user_guild_ids = state.user_guilds.get(&user_id).cloned().unwrap_or_default();
-    let guilds: Vec<Guild> = user_guild_ids
-        .iter()
-        .filter_map(|id| state.guilds.get(id).cloned())
-        .collect();
+    let my_guilds = Guilds::find()
+        .find_with_related(GuildMembers)
+        .filter(guild_members::Column::UserId.eq(user_id.0.clone()))
+        .all(&db)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    Json(guilds)
+    let mut result = Vec::new();
+
+    for (guild_model, _) in my_guilds {
+        result.push(Guild {
+            id: GuildId(guild_model.id),
+            owner_id: UserId(guild_model.owner_id),
+            icon_url: guild_model.icon_url,
+            banner_url: guild_model.banner_url,
+            name: guild_model.name,
+            channels: vec![],
+            categories: vec![],
+            members: vec![],
+        })
+    }
+
+    Ok(Json(result))
 }
 
 pub async fn create_guild(
     State(state): State<SharedState>,
+    headers: HeaderMap,
     Json(payload): Json<CreateGuildRequest>,
 ) -> impl IntoResponse {
-    let mut state = state.lock().await;
+    let auth_header = headers
+        .get("Authorization")
+        .and_then(|h| h.to_str().ok())
+        .ok_or((
+            StatusCode::UNAUTHORIZED,
+            "Misshing authorization header".to_string(),
+        ))?;
 
-    let guild_id = GuildId(Uuid::new_v4().to_string());
-    let channel_id = ChannelId(Uuid::new_v4().to_string());
+    let token = auth_header
+        .strip_prefix("Bearer ")
+        .ok_or((StatusCode::UNAUTHORIZED, "Invalid token format".to_string()))?;
+
+    let raw_user_id = verify_token(token).map_err(|e| (StatusCode::UNAUTHORIZED, e))?;
+
+    let db = { state.lock().await.db.clone() };
+
+    let guild_id = Uuid::new_v4().to_string();
+    let channel_id = Uuid::new_v4().to_string();
+    let now = chrono::Utc::now().naive_utc();
+
+    let new_guild = guilds::ActiveModel {
+        id: Set(guild_id.clone()),
+        owner_id: Set(raw_user_id.clone()),
+        name: Set(payload.name.clone()),
+        banner_url: Set(None),
+        icon_url: Set(None),
+    };
+
+    let new_member = guild_members::ActiveModel {
+        guild_id: Set(guild_id.clone()),
+        user_id: Set(raw_user_id.clone()),
+        nickname: Set(None),
+        roles: Set(Some(serde_json::json!(["owner"]))),
+        joined_at: Set(now),
+    };
+
+    let new_channel = channels::ActiveModel {
+        id: Set(channel_id.clone()),
+        guild_id: Set(guild_id.clone()),
+        name: Set("general".to_string()),
+        position: Set(0),
+        category_id: Set(None),
+    };
+
+    new_guild
+        .insert(&db)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    new_member
+        .insert(&db)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let inserted_channel = new_channel
+        .insert(&db)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let general_channel = MessageChannel {
-        id: channel_id.clone(),
-        guild_id: guild_id.clone(),
+        id: ChannelId(inserted_channel.id),
+        guild_id: GuildId(inserted_channel.guild_id),
         category_id: None,
-        name: "general".to_string(),
-        position: 0,
+        name: inserted_channel.name,
+        position: inserted_channel.position,
         history: Vec::new(),
     };
 
-    let guild = Guild {
-        id: guild_id.clone(),
+    let guild_response = Guild {
+        id: GuildId(guild_id),
         name: payload.name,
-        owner_id: payload.owner_id.clone(),
+        owner_id: UserId(raw_user_id),
+        icon_url: None,
+        banner_url: None,
         members: Vec::new(),
-        categories: Vec::new(),
-        channels: vec![general_channel.clone()],
+        categories: Some(Vec::new()),
+        channels: vec![general_channel],
     };
 
-    state.channels.insert(channel_id, general_channel);
-    state.guilds.insert(guild_id.clone(), guild.clone());
-
-    state.link_user_to_guild(payload.owner_id, guild_id.clone());
-
-    state.save_guilds();
-
-    (StatusCode::CREATED, Json(guild)).into_response()
+    Ok((StatusCode::CREATED, Json(guild_response)))
 }
 
 pub async fn delete_guild(
     State(state): State<SharedState>,
     Path(guild_id): Path<GuildId>,
-) -> impl IntoResponse {
-    let mut state = state.lock().await;
+) -> Result<StatusCode, (StatusCode, String)> {
+    let db = { state.lock().await.db.clone() };
 
-    if let Some(guild) = state.guilds.remove(&guild_id) {
-        for channel in guild.channels {
-            state.channels.remove(&channel.id);
-        }
+    let delete_result = Guilds::delete_by_id(guild_id.0)
+        .exec(&db)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-        for member in guild.members {
-            if let Some(user_guild_list) = state.user_guilds.get_mut(&member.user_id) {
-                user_guild_list.retain(|id| id != &guild_id);
-            }
-        }
-
-        state.save_guilds();
-        StatusCode::NO_CONTENT.into_response()
-    } else {
-        (StatusCode::NOT_FOUND, "Guild not found").into_response()
+    if delete_result.rows_affected == 0 {
+        return Err((StatusCode::NOT_FOUND, "Guild not found".to_string()));
     }
+
+    Ok(StatusCode::NO_CONTENT)
 }
 
 pub async fn add_member_to_guild(
     State(state): State<SharedState>,
     Path(guild_id): Path<GuildId>,
-    Json(payload): Json<AddMemberPayLoad>,
+    Json(payload): Json<AddMemberPayload>,
 ) -> impl IntoResponse {
-    let mut state = state.lock().await;
-
-    if !state.guilds.contains_key(&guild_id) {
-        return (StatusCode::NOT_FOUND, "Guild not found").into_response();
-    }
-
-    state.link_user_to_guild(payload.user_id, guild_id);
-    state.save_guilds();
-
-    StatusCode::OK.into_response()
 }
 
 pub async fn remove_member_from_guild(
     State(state): State<SharedState>,
     Path((guild_id, user_id)): Path<(GuildId, UserId)>,
 ) -> impl IntoResponse {
-    let mut state = state.lock().await;
-
-    if let Some(guild) = state.guilds.get_mut(&guild_id) {
-        guild.members.retain(|m| m.user_id != user_id);
-    }
-
-    if let Some(user_guild_list) = state.user_guilds.get_mut(&user_id) {
-        user_guild_list.retain(|id| id != &guild_id);
-    }
-
-    state.save_guilds();
-    StatusCode::NO_CONTENT.into_response()
 }

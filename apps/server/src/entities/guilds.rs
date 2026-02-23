@@ -10,10 +10,14 @@ pub struct Model {
     pub id: String,
     pub name: String,
     pub owner_id: String,
+    pub banner_url: Option<String>,
+    pub icon_url: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::categories::Entity")]
+    Categories,
     #[sea_orm(has_many = "super::channels::Entity")]
     Channels,
     #[sea_orm(has_many = "super::guild_members::Entity")]
@@ -26,6 +30,12 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Users,
+}
+
+impl Related<super::categories::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Categories.def()
+    }
 }
 
 impl Related<super::channels::Entity> for Entity {

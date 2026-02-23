@@ -18,6 +18,13 @@ pub struct RegisterRequest {
     pub display_name: Option<String>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct AuthResponse {
+    pub user_id: UserId,
+    pub username: String,
+    pub token: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateProfileRequest {
     pub display_name: Option<String>,
@@ -42,6 +49,13 @@ pub struct CreateChannelRequest {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JoinGuildRequest {
     pub invite_code: String,
+}
+
+// --- Channel ---
+
+#[derive(Deserialize)]
+pub struct HistoryQuery {
+    pub before: Option<String>,
 }
 
 // --- Relationships ---

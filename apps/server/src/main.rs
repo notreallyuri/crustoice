@@ -2,13 +2,12 @@ use axum::{
     Router,
     routing::{delete, get, post},
 };
+use dotenvy::dotenv;
 use state::AppState;
 use std::sync::Arc;
 use tokio::{net::TcpListener, sync::Mutex};
 
 pub mod entities;
-pub mod models;
-pub mod paths;
 pub mod requests_http;
 pub mod requests_ws;
 pub mod services;
@@ -17,12 +16,16 @@ pub mod ws;
 
 #[tokio::main]
 async fn main() {
-    let state = Arc::new(Mutex::new(AppState::load()));
+    dotenv().ok();
+
+    let state = Arc::new(Mutex::new(AppState::load().await));
 
     let user_router =
         Router::new().route("/{user_id}/guilds", get(requests_http::guilds::get_guilds));
 
-    let auth_router = Router::new().route("/login", post(requests_http::auth::login));
+    let auth_router = Router::new()
+        .route("/login", post(requests_http::auth::login))
+        .route("/register", post(requests_http::auth::register));
 
     let guild_router = Router::new()
         .route("/", post(requests_http::guilds::create_guild))

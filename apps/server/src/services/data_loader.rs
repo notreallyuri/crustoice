@@ -10,7 +10,7 @@ use shared::structures::{PresenceStatus, UserPresence, UserProfile};
 pub async fn load_initial_state(
     state: &SharedState,
     user_id: &UserId,
-) -> Result<Vec<Guild>, String> {
+) -> Result<(Vec<Guild>, Vec<UserRelationship>), String> {
     let db = &state.lock().await.db;
 
     let my_guilds: Vec<(guilds::Model, Vec<guild_members::Model>)> = Guilds::find()
@@ -45,8 +45,10 @@ pub async fn load_initial_state(
             id: GuildId(guild_model.id),
             owner_id: UserId(guild_model.owner_id),
             name: guild_model.name,
+            banner_url: guild_model.banner_url,
+            icon_url: guild_model.icon_url,
             channels,
-            categories: None,
+            categories: vec![],
             members: vec![],
         });
     }
@@ -68,18 +70,18 @@ pub async fn load_initial_state(
                     id: UserId(friend.id),
                     profile: UserProfile {
                         username: friend.username,
-                        display_name: friend.display_name,
+                        display_name: friend.display_name.unwrap_or_default(),
                         avatar_url: friend.avatar_url,
                         bio: friend.bio,
                     },
-                },
-                presence: UserPresence {
-                    status: PresenceStatus::Offline,
-                    custom_message: None,
-                    activity: None,
+                    presence: UserPresence {
+                        status: PresenceStatus::Offline,
+                        custom_message: None,
+                        activity: None,
+                    },
                 },
                 status: match rel.status {
-                    0 => RelationshipStatus::PendingOutgoing,
+                    0 => RelationshipStatus::PendingOutcoming,
                     1 => RelationshipStatus::PendingIncoming,
                     2 => RelationshipStatus::Friend,
                     3 => RelationshipStatus::Blocked,
@@ -90,5 +92,5 @@ pub async fn load_initial_state(
         })
         .collect();
 
-    Ok(result_guilds)
+    Ok((result_guilds, result_relationships))
 }

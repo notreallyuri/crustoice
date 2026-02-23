@@ -4,26 +4,19 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "channels")]
+#[sea_orm(table_name = "categories")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub guild_id: String,
     pub name: String,
     pub position: i32,
-    pub category_id: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::categories::Entity",
-        from = "Column::CategoryId",
-        to = "super::categories::Column::Id",
-        on_update = "NoAction",
-        on_delete = "SetNull"
-    )]
-    Categories,
+    #[sea_orm(has_many = "super::channels::Entity")]
+    Channels,
     #[sea_orm(
         belongs_to = "super::guilds::Entity",
         from = "Column::GuildId",
@@ -32,25 +25,17 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     Guilds,
-    #[sea_orm(has_many = "super::messages::Entity")]
-    Messages,
 }
 
-impl Related<super::categories::Entity> for Entity {
+impl Related<super::channels::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Categories.def()
+        Relation::Channels.def()
     }
 }
 
 impl Related<super::guilds::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Guilds.def()
-    }
-}
-
-impl Related<super::messages::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Messages.def()
     }
 }
 

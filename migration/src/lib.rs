@@ -4,6 +4,8 @@ mod m20220101_000001_create_table;
 mod m20260217_234756_create_guild_members;
 mod m20260218_031048_create_relationships_table;
 mod m20260220_212031_create_messages_table;
+mod m20260222_153059_create_categories;
+mod m20260222_160429_alter_guilds;
 
 pub struct Migrator;
 
@@ -15,6 +17,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260217_234756_create_guild_members::Migration),
             Box::new(m20260218_031048_create_relationships_table::Migration),
             Box::new(m20260220_212031_create_messages_table::Migration),
+            Box::new(m20260222_153059_create_categories::Migration),
+            Box::new(m20260222_160429_alter_guilds::Migration),
         ]
     }
 }

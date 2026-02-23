@@ -21,3 +21,6 @@ sea-orm = { version = "2.0.0-rc", features = [
   "runtime-tokio-rustls",
   "macros",
 ] }
+bcrypt = "0.18.0"
+jsonwebtoken = "10.3.0"
+dotenvy = "0.15.7"

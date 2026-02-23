@@ -1,15 +1,12 @@
 use crate::entities::prelude::Users;
-use crate::entities::relationships;
 use crate::services::{presence, user_service};
 use crate::state::{ActiveSession, SharedState, Tx};
-use axum::extract::ws::Message;
 use sea_orm::EntityTrait;
 use shared::structures::UserPresence;
 use shared::{
     protocol::ServerMessage,
-    structures::{Guild, PresenceStatus, UserId, UserProfile},
+    structures::{PresenceStatus, UserId},
 };
-use tokio::sync::mpsc::UnboundedSender;
 
 pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Result<(), String> {
     let user_data = {
@@ -73,16 +70,13 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
 }
 
 pub async fn handle_disconnect(state: &SharedState, user_id: UserId) {
-    let _ = presence::set_presence(
-        &state,
-        &user_id,
-        UserPresence {
-            status: PresenceStatus::Offline,
-            custom_message: None,
-            activity: None,
-        },
-    )
-    .await;
+    let base_presence = UserPresence {
+        status: PresenceStatus::Offline,
+        custom_message: None,
+        activity: None,
+    };
+
+    let _ = presence::set_presence(&state, &user_id, &base_presence).await;
 
     let db = { state.lock().await.db.clone() };
 

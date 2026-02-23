@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::structures::{
-    ChannelId, Guild, Message, MessageId, PresenceStatus, User, UserId, UserPublic,
-    UserRelationship, error::ErrorCode,
+    ChannelId, Guild, Message, PresenceStatus, User, UserId, UserPublic, UserRelationship,
+    error::ErrorCode,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -20,10 +20,6 @@ pub enum ClientMessage {
     },
     SetStatus {
         status: PresenceStatus,
-    },
-    FetchHistory {
-        channel_id: ChannelId,
-        before_message_id: Option<MessageId>,
     },
 }
 
@@ -49,9 +45,5 @@ pub enum ServerMessage {
     Error {
         code: ErrorCode,
         message: String,
-    },
-    ChannelHistory {
-        channel_id: ChannelId,
-        messages: Vec<Message>,
     },
 }

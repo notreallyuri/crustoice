@@ -2,6 +2,7 @@
 
 pub mod prelude;
 
+pub mod categories;
 pub mod channels;
 pub mod guild_members;
 pub mod guilds;

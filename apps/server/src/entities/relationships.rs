@@ -34,4 +34,10 @@ pub enum Relation {
     Users1,
 }
 
+impl Related<super::users::Entity> for Entity {
+    fn to() -> sea_orm::RelationDef {
+        Relation::Users2.def()
+    }
+}
+
 impl ActiveModelBehavior for ActiveModel {}

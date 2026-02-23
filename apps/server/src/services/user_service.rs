@@ -1,4 +1,4 @@
-use crate::entities::{prelude::Users, users};
+use crate::entities::prelude::Users;
 use sea_orm::*;
 use shared::structures::{UserId, UserProfile};
 
@@ -9,7 +9,7 @@ pub async fn get_user_profile(
     let user = Users::find_by_id(user_id.0.clone()).one(db).await?;
 
     Ok(user.map(|u| UserProfile {
-        username: u.username,
+        username: u.username.clone(),
         display_name: u.username,
         avatar_url: u.avatar_url,
         bio: u.bio,

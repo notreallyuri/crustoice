@@ -17,6 +17,8 @@ pub struct GuildMember {
 pub struct Guild {
     pub id: GuildId,
     pub owner_id: UserId,
+    pub banner_url: Option<String>,
+    pub icon_url: Option<String>,
     pub name: String,
 
     pub members: Vec<GuildMember>,

@@ -16,11 +16,11 @@ pub async fn set_presence(
 
     let json = serde_json::to_string(presence).map_err(|e| e.to_string())?;
 
-    cmd("SETEX")
+    let _: () = cmd("SETEX")
         .arg(format!("presence:{}", user_id.0))
         .arg(60)
-        .arg(json)
-        .query_async::<_, ()>(&mut conn)
+        .arg(&json) // Pass as reference
+        .query_async(&mut conn)
         .await
         .map_err(|e| e.to_string())?;
 
@@ -35,7 +35,7 @@ pub async fn get_presence(state: &SharedState, user_id: &UserId) -> Result<UserP
 
     let mut conn = pool.get().await.map_err(|e| e.to_string())?;
 
-    let json = cmd("GET")
+    let json: Option<String> = cmd("GET")
         .arg(format!("presence:{}", user_id.0))
         .query_async(&mut conn)
         .await

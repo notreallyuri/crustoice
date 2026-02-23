@@ -1,7 +1,5 @@
-use crate::services::identity::handle_identify;
-use crate::services::{broadcast, identity, presence};
 use crate::{
-    requests_ws::{chat, identify, set_status},
+    services::{broadcast, chat, identity, presence},
     state::SharedState,
 };
 use axum::{
@@ -79,7 +77,7 @@ async fn handle_client_message(
 ) {
     match msg {
         ClientMessage::Identify { user_id } => {
-            if let Err(e) = handle_identify(state, user_id, tx).await {
+            if let Err(e) = identity::handle_identify(state, user_id, tx).await {
                 eprintln!("Failed to identify user: {}", e);
             }
         }
