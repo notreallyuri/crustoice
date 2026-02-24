@@ -1,4 +1,4 @@
-use shared::structures::{ChannelId, ChatMessage, Guild, GuildId, UserId, UserProfile};
+use shared::structures::{ChannelId, Guild, GuildId, Message, UserId, UserProfile};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 
@@ -6,7 +6,7 @@ use tokio::sync::Mutex;
 pub struct ClientStore {
     pub current_user: Option<UserProfile>,
     pub guilds: Vec<Guild>,
-    pub messages: HashMap<ChannelId, Vec<ChatMessage>>,
+    pub messages: HashMap<ChannelId, Vec<Message>>,
 
     pub user_cache: HashMap<UserId, UserProfile>,
     pub active_channel_id: Option<ChannelId>,

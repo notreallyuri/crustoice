@@ -1,6 +1,6 @@
 use crate::entities::{channels, guild_members, guilds, prelude::*, relationships, users};
 use crate::state::SharedState;
-use sea_orm::{ColumnTrait, Condition, EntityTrait, LoaderTrait, ModelTrait, QueryFilter};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use shared::structures::ids::GuildId;
 use shared::structures::{
     Guild, MessageChannel, RelationshipStatus, UserPublic, UserRelationship, ids::UserId,
@@ -56,7 +56,7 @@ pub async fn load_initial_state(
     let my_relationships: Vec<(relationships::Model, Option<users::Model>)> = Relationships::find()
         .filter(relationships::Column::UserId.eq(user_id.0.clone()))
         .find_also_related(Users)
-        .all(&db)
+        .all(db)
         .await
         .map_err(|e| e.to_string())?;
 

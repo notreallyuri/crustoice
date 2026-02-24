@@ -56,7 +56,7 @@ pub async fn get_channel_history(
             channel_id: ChannelId(msg.channel_id),
             author_id: UserId(msg.author_id),
             content: msg.content,
-            created_at: msg.created_at,
+            created_at: msg.created_at.to_string(),
             updated_at: msg.updated_at,
         })
         .collect();

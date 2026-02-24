@@ -9,7 +9,6 @@ use tokio::{net::TcpListener, sync::Mutex};
 
 pub mod entities;
 pub mod requests_http;
-pub mod requests_ws;
 pub mod services;
 pub mod state;
 pub mod ws;

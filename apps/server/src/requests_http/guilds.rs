@@ -1,5 +1,3 @@
-use std::arch::x86_64::_mm_pause;
-
 use crate::entities::{channels, guilds, prelude::*};
 use crate::services::jwt::verify_token;
 use crate::{entities::guild_members, state::SharedState};
@@ -52,7 +50,7 @@ pub async fn create_guild(
     State(state): State<SharedState>,
     headers: HeaderMap,
     Json(payload): Json<CreateGuildRequest>,
-) -> impl IntoResponse {
+) -> Result<(StatusCode, Json<Guild>), (StatusCode, String)> {
     let auth_header = headers
         .get("Authorization")
         .and_then(|h| h.to_str().ok())
@@ -128,7 +126,7 @@ pub async fn create_guild(
         icon_url: None,
         banner_url: None,
         members: Vec::new(),
-        categories: Some(Vec::new()),
+        categories: Vec::new(),
         channels: vec![general_channel],
     };
 
@@ -137,18 +135,42 @@ pub async fn create_guild(
 
 pub async fn delete_guild(
     State(state): State<SharedState>,
+    headers: HeaderMap,
     Path(guild_id): Path<GuildId>,
 ) -> Result<StatusCode, (StatusCode, String)> {
+    let auth_header = headers
+        .get("Authorization")
+        .and_then(|h| h.to_str().ok())
+        .ok_or((
+            StatusCode::UNAUTHORIZED,
+            "Missing Authorization header".to_string(),
+        ))?;
+
+    let token = auth_header
+        .strip_prefix("Bearer ")
+        .ok_or((StatusCode::UNAUTHORIZED, "Invalid token format".to_string()))?;
+
+    let raw_user_id = verify_token(token).map_err(|e| (StatusCode::UNAUTHORIZED, e))?;
+
     let db = { state.lock().await.db.clone() };
 
-    let delete_result = Guilds::delete_by_id(guild_id.0)
+    let guild = Guilds::find_by_id(guild_id.0.clone())
+        .one(&db)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::NOT_FOUND, "Guild not found".to_string()))?;
+
+    if guild.owner_id != raw_user_id {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "Only the guild owner can delete this guild".to_string(),
+        ));
+    }
+
+    Guilds::delete_by_id(guild_id.0)
         .exec(&db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-
-    if delete_result.rows_affected == 0 {
-        return Err((StatusCode::NOT_FOUND, "Guild not found".to_string()));
-    }
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -156,7 +178,7 @@ pub async fn delete_guild(
 pub async fn add_member_to_guild(
     State(state): State<SharedState>,
     Path(guild_id): Path<GuildId>,
-    Json(payload): Json<AddMemberPayload>,
+    Json(payload): Json<AddMemberPayLoad>,
 ) -> impl IntoResponse {
 }
 

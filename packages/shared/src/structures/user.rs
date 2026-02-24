@@ -1,3 +1,7 @@
+use crate::structures::user_settings::{
+    locale::Locale, notifications::NotificationSettings, ui::UISettings,
+};
+
 use super::ids::UserId;
 use serde::{Deserialize, Serialize};
 
@@ -64,11 +68,10 @@ pub struct UserProfile {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserSettings {
-    pub theme: String,       // TODO: Move from a non-strict string to a proper enum
-    pub locale: String,      // TODO: Move from a non-strict string to a proper enum
-    pub notifications: bool, // TODO: Write a proper notification settings structure
-
-    pub developer_mode: bool, // Useless for a long time
+    pub theme: UISettings,
+    pub locale: Locale,
+    pub notifications: NotificationSettings,
+    pub developer_mode: bool,
 }
 
 // --- 3. Activity ---
