@@ -1,6 +1,6 @@
 use crate::entities::{guild_members, prelude::*};
 use crate::state::SharedState;
-use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use shared::protocol::ServerMessage;
 use shared::structures::ids::GuildId;
 

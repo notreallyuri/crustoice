@@ -1,5 +1,5 @@
 use crate::{
-    services::{broadcast, chat, identity, presence},
+    services::{chat, identity, presence},
     state::SharedState,
 };
 use axum::{
@@ -10,11 +10,7 @@ use axum::{
     response::IntoResponse,
 };
 use futures::{SinkExt, StreamExt};
-use shared::structures::user;
-use shared::{
-    protocol::{ClientMessage, ServerMessage},
-    structures::{PresenceStatus, UserId},
-};
+use shared::{protocol::ClientMessage, structures::UserId};
 use uuid::Uuid;
 
 pub async fn ws_handler(
@@ -61,7 +57,7 @@ async fn handle_socket(socket: WebSocket, state: SharedState) {
             guard.sessions.remove(&user_id);
         }
 
-        identity::handle_disconnect(&state, &user_id).await;
+        identity::handle_disconnect(&state, user_id).await;
     } else {
         println!("Socket {} disconnected (Was never identified).", socket_id);
     }
@@ -86,12 +82,12 @@ async fn handle_client_message(
             content,
         } => {
             if let Some(uid) = current_user_id {
-                chat(channel_id.0, content, state, uid.0.clone()).await;
+                chat::handle_chat(channel_id, content, &state, uid.clone()).await;
             }
         }
-        ClientMessage::SetStatus { status } => {
+        ClientMessage::SetPresence { presence } => {
             if let Some(uid) = current_user_id {
-                let _ = presence::set_presence(&state, uid, status).await;
+                let _ = presence::set_presence(&state, uid, &presence).await;
             }
         }
         _ => {}

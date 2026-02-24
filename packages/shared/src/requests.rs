@@ -49,6 +49,9 @@ pub struct CreateChannelRequest {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JoinGuildRequest {
     pub invite_code: String,
+    pub until: String,
+    pub max_uses: Option<u32>,
+    pub current_uses: u32,
 }
 
 // --- Channel ---
