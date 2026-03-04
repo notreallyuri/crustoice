@@ -22,6 +22,8 @@ pub enum Relation {
     Channels,
     #[sea_orm(has_many = "super::guild_members::Entity")]
     GuildMembers,
+    #[sea_orm(has_many = "super::invites::Entity")]
+    Invites,
     #[sea_orm(
         belongs_to = "super::users::Entity",
         from = "Column::OwnerId",
@@ -47,6 +49,12 @@ impl Related<super::channels::Entity> for Entity {
 impl Related<super::guild_members::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::GuildMembers.def()
+    }
+}
+
+impl Related<super::invites::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Invites.def()
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::{
-    services::{chat, identity, presence},
+    services::{chat, identity, jwt::verify_token, presence},
     state::SharedState,
 };
 use axum::{
@@ -22,7 +22,7 @@ pub async fn ws_handler(
 
 async fn handle_socket(socket: WebSocket, state: SharedState) {
     let socket_id = Uuid::new_v4().to_string();
-    println!("New connection: {} (Waiting for Identity)", socket_id);
+    println!("New connection: {} (Waiting for identity)", socket_id);
 
     let mut current_user_id: Option<UserId> = None;
 
@@ -38,14 +38,46 @@ async fn handle_socket(socket: WebSocket, state: SharedState) {
     });
 
     while let Some(Ok(msg)) = ws_receiver.next().await {
-        if let Message::Text(text) = msg
-            && let Ok(client_msg) = serde_json::from_str::<ClientMessage>(&text)
-        {
-            if let ClientMessage::Identify { ref user_id } = client_msg {
-                current_user_id = Some(user_id.clone());
-            }
+        if let Message::Text(text) = msg {
+            if let Ok(client_msg) = serde_json::from_str::<ClientMessage>(&text) {
+                match client_msg {
+                    ClientMessage::Identify { token } => match verify_token(&token) {
+                        Ok(raw_id) => {
+                            let user_id = UserId(raw_id);
+                            current_user_id = Some(user_id.clone());
 
-            handle_client_message(tx.clone(), client_msg, &state, &current_user_id).await;
+                            println!("Socket {} authenticated as {}", socket_id, user_id.0);
+
+                            if let Err(e) =
+                                identity::handle_identify(&state, user_id, tx.clone()).await
+                            {
+                                eprintln!("Failed to identify user: {}", e);
+                            }
+                        }
+
+                        Err(e) => {
+                            eprintln!("Socket {} provided invalid token: {}", socket_id, e);
+                        }
+                    },
+                    ClientMessage::Chat {
+                        channel_id,
+                        content,
+                    } => {
+                        if let Some(uid) = &current_user_id {
+                            let _ =
+                                chat::handle_chat(channel_id, content, &state, uid.clone()).await;
+                        } else {
+                            eprintln!("Unauthenticated socket tried to chat!");
+                        }
+                    }
+                    ClientMessage::SetPresence { presence } => {
+                        if let Some(uid) = &current_user_id {
+                            let _ = presence::set_presence(&state, uid, &presence).await;
+                        }
+                    }
+                    _ => {}
+                }
+            }
         }
     }
 
@@ -57,39 +89,10 @@ async fn handle_socket(socket: WebSocket, state: SharedState) {
             guard.sessions.remove(&user_id);
         }
 
-        identity::handle_disconnect(&state, user_id).await;
+        let _ = identity::handle_disconnect(&state, user_id).await;
     } else {
         println!("Socket {} disconnected (Was never identified).", socket_id);
     }
 
     send_task.abort();
-}
-
-async fn handle_client_message(
-    tx: tokio::sync::mpsc::UnboundedSender<Message>,
-    msg: ClientMessage,
-    state: &SharedState,
-    current_user_id: &Option<UserId>,
-) {
-    match msg {
-        ClientMessage::Identify { user_id } => {
-            if let Err(e) = identity::handle_identify(state, user_id, tx).await {
-                eprintln!("Failed to identify user: {}", e);
-            }
-        }
-        ClientMessage::Chat {
-            channel_id,
-            content,
-        } => {
-            if let Some(uid) = current_user_id {
-                chat::handle_chat(channel_id, content, &state, uid.clone()).await;
-            }
-        }
-        ClientMessage::SetPresence { presence } => {
-            if let Some(uid) = current_user_id {
-                let _ = presence::set_presence(&state, uid, &presence).await;
-            }
-        }
-        _ => {}
-    }
 }

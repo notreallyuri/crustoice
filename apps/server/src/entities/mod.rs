@@ -6,6 +6,7 @@ pub mod categories;
 pub mod channels;
 pub mod guild_members;
 pub mod guilds;
+pub mod invites;
 pub mod messages;
 pub mod relationships;
 pub mod users;

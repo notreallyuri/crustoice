@@ -3,6 +3,7 @@ use crate::structures::user_settings::{
 };
 
 use super::ids::UserId;
+use sea_orm::FromJsonQueryResult;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -66,9 +67,9 @@ pub struct UserProfile {
     pub bio: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, FromJsonQueryResult, Deserialize, Clone, PartialEq, Eq)]
 pub struct UserSettings {
-    pub theme: UISettings,
+    pub ui: UISettings,
     pub locale: Locale,
     pub notifications: NotificationSettings,
     pub developer_mode: bool,

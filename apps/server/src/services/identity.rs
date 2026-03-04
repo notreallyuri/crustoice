@@ -2,7 +2,10 @@ use crate::entities::prelude::Users;
 use crate::services::{presence, user_service};
 use crate::state::{ActiveSession, SharedState, Tx};
 use sea_orm::EntityTrait;
-use shared::structures::UserPresence;
+use shared::structures::user_settings::locale::Locale;
+use shared::structures::user_settings::notifications::NotificationSettings;
+use shared::structures::user_settings::ui::UISettings;
+use shared::structures::{User, UserAccount, UserPresence, UserProfile, UserSettings};
 use shared::{
     protocol::ServerMessage,
     structures::{PresenceStatus, UserId},
@@ -41,14 +44,40 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
 
     presence::set_presence(state, &user_id, &initial_presence).await?;
 
-    let welcome = ServerMessage::IdentityValidated {
-        user: shared::structures::user::UserProfile {
-            username: user_record.username,
-            display_name: user_record.display_name,
-            avatar_url: user_record.avatar_url,
-            bio: user_record.bio,
+    let user = User {
+        id: user_id.clone(),
+
+        account: UserAccount {
+            email: user_record.email.clone(),
+            verified: true,
+        },
+
+        profile: UserProfile {
+            username: user_record.username.clone(),
+            display_name: user_record
+                .display_name
+                .unwrap_or(user_record.username.clone()),
+            avatar_url: user_record.avatar_url.clone(),
+            bio: user_record.bio.clone(),
+        },
+
+        settings: UserSettings {
+            ui: UISettings {
+                theme: shared::structures::user_settings::ui::UITheme::DefaultDark,
+            },
+            locale: Locale::EnUS,
+            notifications: NotificationSettings { active: true },
+            developer_mode: false,
+        },
+
+        presence: UserPresence {
+            status: PresenceStatus::Online,
+            custom_message: None,
+            activity: None,
         },
     };
+
+    let welcome = ServerMessage::IdentityValidated { user };
 
     let guard = state.lock().await;
     guard.send_to_user(&user_id, &welcome);

@@ -3,6 +3,7 @@ import {
   ChatMessage,
   Guild,
   GuildId,
+  User,
   UserId,
   UserProfile
 } from "@/types";
@@ -14,9 +15,17 @@ export interface GuildRepository {
 }
 
 export interface UserRepository {
-  login: (username: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (
+    email: string,
+    username: string,
+    password: string,
+    display_name?: string
+  ) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   fetchUser: (userId: UserId) => Promise<void>;
+  getMe: () => Promise<void>;
+  getGuilds: () => Promise<void>;
 }
 
 export interface ChannelRepository {
@@ -33,8 +42,13 @@ export interface WebSocketRepository {
   initWebSocket: () => Promise<void>;
 }
 
+export type AppRepository = GuildRepository &
+  UserRepository &
+  ChannelRepository &
+  WebSocketRepository;
+
 export interface AppState {
-  currentUser: UserProfile | null;
+  currentUser: User | null;
   guilds: Guild[];
   messages: Record<ChannelId, ChatMessage[]>;
   userCache: Record<UserId, UserProfile>;
@@ -42,8 +56,4 @@ export interface AppState {
   activeGuildId: GuildId | null;
 }
 
-export type AppStore = AppState &
-  GuildRepository &
-  UserRepository &
-  ChannelRepository &
-  WebSocketRepository;
+export type AppStore = AppState & AppRepository;

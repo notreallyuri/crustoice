@@ -7,6 +7,7 @@ mod m20260220_212031_create_messages_table;
 mod m20260222_153059_create_categories;
 mod m20260222_160429_alter_guilds;
 mod m20260224_165754_create_invite_table;
+mod m20260225_010640_alter_users;
 
 pub struct Migrator;
 
@@ -21,6 +22,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260222_153059_create_categories::Migration),
             Box::new(m20260222_160429_alter_guilds::Migration),
             Box::new(m20260224_165754_create_invite_table::Migration),
+            Box::new(m20260225_010640_alter_users::Migration),
         ]
     }
 }

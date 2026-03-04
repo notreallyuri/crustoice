@@ -13,8 +13,23 @@
     "windows": [
       {
         "title": "desktop",
-        "width": 800,
-        "height": 600
+        "width": 1280,
+        "height": 720,
+        "label": "main",
+        "visible": false,
+        "decorations": false
+      },
+      {
+        "title": "loading",
+        "width": 400,
+        "height": 300,
+        "label": "splashscreen",
+        "decorations": false,
+        "transparent": true,
+        "center": true,
+        "resizable": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true
       }
     ],
     "security": {

@@ -1,27 +1,51 @@
-import { StateCreator } from "zustand";
-import { AppStore, UserRepository } from "../types";
+import type { StateCreator } from "zustand";
+import type { AppStore, UserRepository } from "../types";
 import { invoke } from "@tauri-apps/api/core";
-import { Guild, UserProfile } from "@/types";
+import { Guild, User } from "@/types";
 
-export const userService: StateCreator<AppStore, [], [], UserRepository> = (
-  set
-) => ({
-  login: async (username) => {
-    const user = await invoke<UserProfile>("login", { username });
-    set({ currentUser: user });
-
-    try {
-      const guilds = await invoke<Guild[]>("get_guilds", { userId: user.id });
-      set({ guilds });
-    } catch (e) {
-      console.error("Failed to fetch initial guilds:", e);
-    }
-  },
-  sendMessage: async (content) => {
-    set((state) => {
-      if (!state.activeChannelId) return {};
-      invoke("send_chat", { content, channelId: state.activeChannelId });
-      return {};
+export const createUserService: StateCreator<
+  AppStore,
+  [],
+  [],
+  UserRepository
+> = (set, get) => ({
+  async login(email, password) {
+    await invoke<string>("login", {
+      payload: { email, password }
     });
+
+    await get().getMe();
+  },
+
+  async register(email, username, password, display_name) {
+    const userId = await invoke<string>("register", {
+      payload: { email, username, password, display_name }
+    });
+
+    await get().fetchUser(userId);
+  },
+
+  async sendMessage(content) {
+    const { activeChannelId } = get();
+    if (!activeChannelId) return;
+
+    await invoke("send_chat", {
+      channelId: activeChannelId,
+      content
+    });
+  },
+
+  async fetchUser(userId) {
+    console.log("Fetching user with ID:", userId);
+  },
+  async getMe() {
+    const user = await invoke<User>("get_me");
+
+    set({ currentUser: user });
+  },
+  async getGuilds() {
+    const guilds: Guild[] = await invoke<Guild[]>("get_guilds");
+
+    set({ guilds });
   }
 });

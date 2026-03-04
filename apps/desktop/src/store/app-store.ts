@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import { AppStore } from "./types";
-import { userService } from "./services/user-service";
-import { guildService } from "./services/guild-service";
-import { channelService } from "./services/channel-service";
-import { webSocketService } from "./services/websocket-service";
+import { createUserService } from "./services/user-service";
+import { createGuildService } from "./services/guild-service";
+import { createChannelService } from "./services/channel-service";
+import { createWebSocketService } from "./services/ws-service";
 
-export const useAppStore = create<AppStore>((...a) => ({
+export const useAppStore = create<AppStore>()((set, get, api) => ({
   currentUser: null,
   guilds: [],
   messages: {},
@@ -13,8 +13,8 @@ export const useAppStore = create<AppStore>((...a) => ({
   activeChannelId: null,
   activeGuildId: null,
 
-  ...userService(...a),
-  ...guildService(...a),
-  ...channelService(...a),
-  ...webSocketService(...a)
+  ...createUserService(set, get, api),
+  ...createGuildService(set, get, api),
+  ...createChannelService(set, get, api),
+  ...createWebSocketService(set, get, api)
 }));

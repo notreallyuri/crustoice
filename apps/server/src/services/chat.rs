@@ -43,7 +43,7 @@ pub async fn handle_chat(
             author_id: UserId(inserted_msg.author_id),
             content: inserted_msg.content,
             created_at: inserted_msg.created_at.to_string(),
-            updated_at: None,
+            updated_at: String::new(),
         },
     };
 

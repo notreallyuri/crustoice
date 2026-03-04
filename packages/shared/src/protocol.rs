@@ -1,15 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 use crate::structures::{
-    ChannelId, Guild, Message, PresenceStatus, User, UserId, UserPresence, UserPublic,
-    UserRelationship, error::ErrorCode,
+    ChannelId, Guild, Message, User, UserPresence, UserPublic, UserRelationship, error::ErrorCode,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ClientMessage {
     Identify {
-        user_id: UserId,
+        token: String,
     },
     JoinRoom {
         channel_id: ChannelId,

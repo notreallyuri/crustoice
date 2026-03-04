@@ -1,0 +1,315 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+user_settings/
+  locale.rs
+  mod.rs
+  notifications.rs
+  ui.rs
+channel.rs
+error.rs
+guild.rs
+ids.rs
+mod.rs
+user.rs
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="user_settings/locale.rs">
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Locale {
+    #[serde(rename = "pt-BR")]
+    PtBr,
+    #[serde(rename = "en-US")]
+    EnUS,
+}
+</file>
+
+<file path="user_settings/mod.rs">
+pub mod locale;
+pub mod notifications;
+pub mod ui;
+</file>
+
+<file path="user_settings/notifications.rs">
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct NotificationSettings {
+    pub active: bool,
+}
+</file>
+
+<file path="user_settings/ui.rs">
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum UITheme {
+    DefaultDark,
+    DefaultLight,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct UISettings {
+    pub theme: UITheme,
+}
+</file>
+
+<file path="channel.rs">
+use super::ids::{CategoryId, ChannelId, GuildId, MessageId, UserId};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Message {
+    pub id: MessageId,
+    pub channel_id: ChannelId,
+    pub author_id: UserId,
+    pub content: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ChannelCategory {
+    pub id: CategoryId,
+    pub guild_id: GuildId,
+    pub name: String,
+    pub position: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MessageChannel {
+    pub id: ChannelId,
+    pub guild_id: GuildId,
+    pub category_id: Option<CategoryId>,
+    pub name: String,
+    pub position: i32,
+    #[serde(default)]
+    pub history: Vec<Message>,
+}
+</file>
+
+<file path="error.rs">
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum ErrorCode {
+    UserNotFound,
+    Unauthorized,
+    RoomNotFound,
+    RateLimited,
+    Custom(String),
+}
+</file>
+
+<file path="guild.rs">
+use super::{
+    channel::{ChannelCategory, MessageChannel},
+    ids::{GuildId, UserId},
+};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GuildMember {
+    pub guild_id: GuildId,
+    pub user_id: UserId,
+    pub nickname: Option<String>,
+    pub roles: Vec<String>,
+    pub joined_at: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Guild {
+    pub id: GuildId,
+    pub owner_id: UserId,
+    pub banner_url: Option<String>,
+    pub icon_url: Option<String>,
+    pub name: String,
+
+    pub members: Vec<GuildMember>,
+    pub categories: Vec<ChannelCategory>,
+    pub channels: Vec<MessageChannel>,
+}
+</file>
+
+<file path="ids.rs">
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct GuildId(pub String);
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct UserId(pub String);
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct ChannelId(pub String);
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct MessageId(pub String);
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct CategoryId(pub String);
+</file>
+
+<file path="mod.rs">
+pub mod channel;
+pub mod error;
+pub mod guild;
+pub mod ids;
+pub mod user;
+pub mod user_settings;
+
+pub use channel::*;
+pub use guild::*;
+pub use ids::*;
+pub use user::*;
+</file>
+
+<file path="user.rs">
+use crate::structures::user_settings::{
+    locale::Locale, notifications::NotificationSettings, ui::UISettings,
+};
+
+use super::ids::UserId;
+use sea_orm::FromJsonQueryResult;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum PresenceStatus {
+    Online,
+    Busy,
+    Away,
+    Invisible,
+    Offline,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ActivityKind {
+    Playing,
+    Streaming,
+    Listening,
+    Reading,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum RelationshipStatus {
+    None,
+    Friend,
+    Blocked,
+    PendingIncoming,
+    PendingOutcoming,
+}
+
+// --- 1. Wrappers ---
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct User {
+    pub id: UserId,
+    pub account: UserAccount,
+    pub profile: UserProfile,
+    pub settings: UserSettings,
+    pub presence: UserPresence,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserPublic {
+    pub id: UserId,
+    #[serde(flatten)]
+    pub profile: UserProfile,
+    pub presence: UserPresence,
+}
+
+// --- 2. Components ---
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserAccount {
+    pub email: String,
+    pub verified: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserProfile {
+    pub username: String,
+    pub display_name: String,
+    pub avatar_url: Option<String>,
+    pub bio: Option<String>,
+}
+
+#[derive(Debug, Serialize, FromJsonQueryResult, Deserialize, Clone, PartialEq, Eq)]
+pub struct UserSettings {
+    pub ui: UISettings,
+    pub locale: Locale,
+    pub notifications: NotificationSettings,
+    pub developer_mode: bool,
+}
+
+// --- 3. Activity ---
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserPresence {
+    pub status: PresenceStatus,
+    pub custom_message: Option<String>,
+    pub activity: Option<UserActivity>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserActivity {
+    pub name: String,
+    pub kind: ActivityKind,
+}
+
+// --- 4. Relationship ---
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserRelationship {
+    pub id: UserId,
+    pub user: UserPublic,
+    pub status: RelationshipStatus,
+    pub since: String,
+}
+</file>
+
+</files>

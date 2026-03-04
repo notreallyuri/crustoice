@@ -22,5 +22,5 @@ sea-orm = { version = "2.0.0-rc", features = [
   "macros",
 ] }
 bcrypt = "0.18.0"
-jsonwebtoken = "10.3.0"
+jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 dotenvy = "0.15.7"

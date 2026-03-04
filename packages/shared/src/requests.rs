@@ -18,7 +18,7 @@ pub struct RegisterRequest {
     pub display_name: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AuthResponse {
     pub user_id: UserId,
     pub username: String,
@@ -47,11 +47,27 @@ pub struct CreateChannelRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct JoinGuildRequest {
+pub struct CreateInviteRequest {
+    pub max_uses: i32,
+    pub expires_in_seconds: Option<i64>,
+    pub requires_approval: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InviteResponse {
     pub invite_code: String,
-    pub until: String,
-    pub max_uses: Option<u32>,
-    pub current_uses: u32,
+    pub guild_id: String,
+    pub expires_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RemoveGuildMemberRequest {
+    pub user_id: UserId,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GuildInviteRequest {
+    pub invite_code: String,
 }
 
 // --- Channel ---

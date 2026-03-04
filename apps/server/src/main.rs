@@ -19,8 +19,13 @@ async fn main() {
 
     let state = Arc::new(Mutex::new(AppState::load().await));
 
-    let user_router =
-        Router::new().route("/{user_id}/guilds", get(requests_http::guilds::get_guilds));
+    let db_for_cron = state.lock().await.db.clone();
+    services::cron::start_invite_cleanup(db_for_cron);
+
+    let user_router = Router::new()
+        .route("/guilds", get(requests_http::users::get_guilds))
+        .route("/guilds/join", post(requests_http::users::join_guild))
+        .route("/@me", get(requests_http::users::get_me));
 
     let auth_router = Router::new()
         .route("/login", post(requests_http::auth::login))
@@ -30,11 +35,11 @@ async fn main() {
         .route("/", post(requests_http::guilds::create_guild))
         .route("/{guild_id}", delete(requests_http::guilds::delete_guild))
         .route(
-            "/{guild_id}/members",
-            post(requests_http::guilds::add_member_to_guild),
+            "/{guild_id}/invites",
+            post(requests_http::guilds::create_invite),
         )
         .route(
-            "/{guild_id}/members/{user_id}",
+            "/{guild_id}/members",
             delete(requests_http::guilds::remove_member_from_guild),
         )
         .route(

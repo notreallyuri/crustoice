@@ -6,7 +6,7 @@ pub enum UITheme {
     DefaultLight,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct UISettings {
     pub theme: UITheme,
 }
