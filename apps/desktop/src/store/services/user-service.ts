@@ -9,22 +9,6 @@ export const createUserService: StateCreator<
   [],
   UserRepository
 > = (set, get) => ({
-  async login(email, password) {
-    await invoke<string>("login", {
-      payload: { email, password }
-    });
-
-    await get().getMe();
-  },
-
-  async register(email, username, password, display_name) {
-    const userId = await invoke<string>("register", {
-      payload: { email, username, password, display_name }
-    });
-
-    await get().fetchUser(userId);
-  },
-
   async sendMessage(content) {
     const { activeChannelId } = get();
     if (!activeChannelId) return;

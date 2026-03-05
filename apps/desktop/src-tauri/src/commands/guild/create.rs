@@ -1,4 +1,4 @@
-use crate::{client_state::ClientState, API_URL};
+use crate::{client_state::ClientState, general::upload::upload_internal, API_URL};
 use shared::{requests::CreateGuildRequest, structures::Guild};
 use tauri::State;
 
@@ -6,6 +6,7 @@ use tauri::State;
 pub async fn create_guild(
     payload: CreateGuildRequest,
     state: State<'_, ClientState>,
+    icon_path: Option<String>,
 ) -> Result<Guild, String> {
     let token = {
         let store = state.store.lock().await;
@@ -38,6 +39,18 @@ pub async fn create_guild(
         .json()
         .await
         .map_err(|e| format!("Parse error: {}", e))?;
+
+    if let Some(path) = icon_path {
+        let ext = std::path::Path::new(&path)
+            .extension()
+            .and_then(|s| s.to_str())
+            .unwrap_or("png")
+            .to_string();
+
+        let id_str = data.id.0.to_string();
+
+        upload_internal(&state, "guild", &id_str, &ext, &path).await?;
+    }
 
     Ok(data)
 }

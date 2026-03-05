@@ -1,3 +1,5 @@
+use crate::structures::ChannelId;
+
 use super::{
     channel::{ChannelCategory, MessageChannel},
     ids::{GuildId, UserId},
@@ -20,7 +22,7 @@ pub struct Guild {
     pub banner_url: Option<String>,
     pub icon_url: Option<String>,
     pub name: String,
-
+    pub default_channel_id: Option<ChannelId>,
     pub members: Vec<GuildMember>,
     pub categories: Vec<ChannelCategory>,
     pub channels: Vec<MessageChannel>,

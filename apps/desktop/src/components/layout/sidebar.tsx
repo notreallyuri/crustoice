@@ -15,11 +15,12 @@ import { SidebarHeader } from "./sidebar-header";
 import { Hash, Users } from "lucide-react";
 import { useState } from "react";
 import { DialogCreateGuild } from "../dialog-create-guild";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 export function Sidebar() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  const currentUser = useAppStore((s) => s.currentUser);
+  const currentUser = useCurrentUser();
   const guilds = useAppStore((s) => s.guilds);
 
   const routerState = useRouterState();

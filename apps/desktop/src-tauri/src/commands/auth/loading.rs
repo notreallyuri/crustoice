@@ -23,18 +23,37 @@ pub async fn check_auth(
     state: State<'_, ClientState>,
     app_handle: AppHandle,
 ) -> Result<UserId, String> {
-    let store = app_handle.store("auth.json").map_err(|e| e.to_string())?;
+    println!("🔍 Running check_auth...");
 
-    let token_val = store.get("jwt_token").ok_or("No token found in store")?;
-    let user_id_val = store.get("user_id").ok_or("No user ID found in store")?;
+    let store = app_handle.store("auth.json").map_err(|e| {
+        println!("❌ Failed to open store: {}", e);
+        e.to_string()
+    })?;
+
+    let token_val = store.get("jwt_token").ok_or_else(|| {
+        println!("❌ No jwt_token found in store. User needs to log in.");
+        "No token found in store".to_string()
+    })?;
+
+    let user_id_val = store.get("user_id").ok_or_else(|| {
+        println!("❌ No user_id found in store.");
+        "No user ID found in store".to_string()
+    })?;
 
     let token = token_val
         .as_str()
-        .ok_or("Invalid token format")?
+        .ok_or_else(|| {
+            println!("❌ Token is not a valid string");
+            "Invalid token format".to_string()
+        })?
         .to_string();
+
     let user_id_str = user_id_val
         .as_str()
-        .ok_or("Invalid user ID format")?
+        .ok_or_else(|| {
+            println!("❌ User ID is not a valid string");
+            "Invalid user ID format".to_string()
+        })?
         .to_string();
 
     {
@@ -42,5 +61,6 @@ pub async fn check_auth(
         store_guard.jwt_token = Some(token);
     }
 
+    println!("✅ check_auth succeeded for user: {}", user_id_str);
     Ok(UserId(user_id_str))
 }

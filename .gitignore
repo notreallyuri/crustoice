@@ -21,3 +21,6 @@ Thumbs.db
 
 # Tauri
 **/node_modules/
+
+# Repomix
+repomix-output.xml

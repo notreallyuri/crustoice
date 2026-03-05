@@ -33,7 +33,7 @@ function RouteComponent() {
     },
     onSubmit: async ({ value }) => {
       try {
-        await login(value.email, value.password);
+        await login(value);
 
         navigate({ to: "/g/@me" });
       } catch (e) {

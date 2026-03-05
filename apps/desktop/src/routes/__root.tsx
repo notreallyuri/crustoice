@@ -1,18 +1,27 @@
 import { useAppStore } from "@/store/app-store";
 import { Outlet, createRootRoute, redirect } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
-import { invoke } from "@tauri-apps/api/core";
 
 export const Route = createRootRoute({
   beforeLoad: async ({ location }) => {
-    if (location.pathname === "/") {
+    const state = useAppStore.getState();
+
+    const isAuthPath = location.pathname.startsWith("/auth");
+
+    if (!state.currentUser) {
       try {
-        const userId = await invoke<string>("check_auth");
-        useAppStore.getState().fetchUser(userId);
-        throw redirect({ to: "/g/me" });
-      } catch {
-        throw redirect({ to: "/auth/login" });
+        await state.initSession();
+      } catch (e) {
+        console.log("Hydration Error (No Session): ", e);
+
+        if (!isAuthPath) {
+          throw redirect({ to: "/auth/login" });
+        }
       }
+    }
+
+    if (location.pathname === "/") {
+      throw redirect({ to: "/g/@me" });
     }
   },
   component: RootComponent

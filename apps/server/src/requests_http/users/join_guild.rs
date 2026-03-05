@@ -1,32 +1,14 @@
-use crate::{entities::guild_members, state::SharedState};
-use axum::{
-    Json,
-    extract::State,
-    http::{HeaderMap, StatusCode},
-};
+use crate::{entities::guild_members, extractors::auth::AuthedUser, state::SharedState};
+use axum::{Json, extract::State, http::StatusCode};
 use sea_orm::{ActiveModelTrait, Set};
 use shared::requests::GuildInviteRequest;
 
 pub async fn join_guild(
     State(state): State<SharedState>,
-    headers: HeaderMap,
+    AuthedUser(user_id): AuthedUser,
     Json(payload): Json<GuildInviteRequest>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let auth_header = headers
-        .get("Authorization")
-        .and_then(|h| h.to_str().ok())
-        .ok_or((
-            StatusCode::UNAUTHORIZED,
-            "Missing Authorization header".to_string(),
-        ))?;
-    let token = auth_header
-        .strip_prefix("Bearer ")
-        .ok_or((StatusCode::UNAUTHORIZED, "Invalid token format".to_string()))?;
-
-    let user_id =
-        crate::services::jwt::verify_token(token).map_err(|e| (StatusCode::UNAUTHORIZED, e))?;
-
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     let new_member = guild_members::ActiveModel {
         guild_id: Set(payload.invite_code),

@@ -1,11 +1,11 @@
 use crate::{
     entities::{invites, prelude::*},
+    extractors::auth::AuthedUser,
     state::SharedState,
 };
 use axum::{
     Json,
     extract::{Path, State},
-    http::HeaderMap,
     http::StatusCode,
 };
 use sea_orm::{ActiveModelTrait, EntityTrait, Set};
@@ -17,26 +17,11 @@ use uuid::Uuid;
 
 pub async fn create_invite(
     State(state): State<SharedState>,
-    headers: HeaderMap,
+    AuthedUser(user_id): AuthedUser,
     Path(guild_id): Path<GuildId>,
     Json(payload): Json<CreateInviteRequest>,
 ) -> Result<(StatusCode, Json<InviteResponse>), (StatusCode, String)> {
-    let auth_header = headers
-        .get("Authorization")
-        .and_then(|h| h.to_str().ok())
-        .ok_or((
-            StatusCode::UNAUTHORIZED,
-            "Missing Authorization header".to_string(),
-        ))?;
-
-    let token = auth_header
-        .strip_prefix("Bearer ")
-        .ok_or((StatusCode::UNAUTHORIZED, "Invalid token format".to_string()))?;
-
-    let user_id =
-        crate::services::jwt::verify_token(token).map_err(|e| (StatusCode::UNAUTHORIZED, e))?;
-
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     let guild = Guilds::find_by_id(guild_id.0.clone())
         .one(&db)

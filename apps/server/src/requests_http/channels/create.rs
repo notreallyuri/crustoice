@@ -22,7 +22,7 @@ pub async fn create_channel(
     Path(guild_id): Path<GuildId>,
     Json(payload): Json<CreateChannelRequest>,
 ) -> impl IntoResponse {
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     let guild_exists = Guilds::find_by_id(guild_id.0.clone())
         .one(&db)

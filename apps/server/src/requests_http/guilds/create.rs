@@ -1,7 +1,6 @@
 use crate::entities::{channels, guilds};
-use crate::services::jwt::verify_token;
+use crate::extractors::auth::AuthedUser;
 use crate::{entities::guild_members, state::SharedState};
-use axum::http::HeaderMap;
 use axum::{Json, extract::State, http::StatusCode};
 use sea_orm::{ActiveModelTrait, Set};
 use shared::{
@@ -12,24 +11,10 @@ use uuid::Uuid;
 
 pub async fn create_guild(
     State(state): State<SharedState>,
-    headers: HeaderMap,
+    AuthedUser(user_id): AuthedUser,
     Json(payload): Json<CreateGuildRequest>,
 ) -> Result<(StatusCode, Json<Guild>), (StatusCode, String)> {
-    let auth_header = headers
-        .get("Authorization")
-        .and_then(|h| h.to_str().ok())
-        .ok_or((
-            StatusCode::UNAUTHORIZED,
-            "Missing authorization header".to_string(),
-        ))?;
-
-    let token = auth_header
-        .strip_prefix("Bearer ")
-        .ok_or((StatusCode::UNAUTHORIZED, "Invalid token format".to_string()))?;
-
-    let user_id = verify_token(token).map_err(|e| (StatusCode::UNAUTHORIZED, e))?;
-
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     let guild_id = Uuid::new_v4().to_string();
     let channel_id = Uuid::new_v4().to_string();

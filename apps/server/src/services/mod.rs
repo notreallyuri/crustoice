@@ -5,4 +5,5 @@ pub mod data_loader;
 pub mod identity;
 pub mod jwt;
 pub mod presence;
+pub mod r2;
 pub mod user_service;

@@ -2,7 +2,6 @@
 
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
-use shared::structures::UserSettings;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "users")]
@@ -18,7 +17,7 @@ pub struct Model {
     pub avatar_url: Option<String>,
     pub bio: Option<String>,
     #[sea_orm(column_type = "JsonBinary")]
-    pub settings: UserSettings,
+    pub settings: Json,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

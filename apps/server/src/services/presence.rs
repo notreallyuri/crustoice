@@ -7,11 +7,7 @@ pub async fn set_presence(
     user_id: &UserId,
     presence: &UserPresence,
 ) -> Result<(), String> {
-    let pool = {
-        let guard = state.lock().await;
-        guard.redis.clone()
-    };
-
+    let pool = state.redis.clone();
     let mut conn = pool.get().await.map_err(|e| e.to_string())?;
 
     let json = serde_json::to_string(presence).map_err(|e| e.to_string())?;
@@ -28,11 +24,7 @@ pub async fn set_presence(
 }
 
 pub async fn get_presence(state: &SharedState, user_id: &UserId) -> Result<UserPresence, String> {
-    let pool = {
-        let guard = state.lock().await;
-        guard.redis.clone()
-    };
-
+    let pool = state.redis.clone();
     let mut conn = pool.get().await.map_err(|e| e.to_string())?;
 
     let json: Option<String> = cmd("GET")

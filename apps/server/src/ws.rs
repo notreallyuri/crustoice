@@ -38,45 +38,43 @@ async fn handle_socket(socket: WebSocket, state: SharedState) {
     });
 
     while let Some(Ok(msg)) = ws_receiver.next().await {
-        if let Message::Text(text) = msg {
-            if let Ok(client_msg) = serde_json::from_str::<ClientMessage>(&text) {
-                match client_msg {
-                    ClientMessage::Identify { token } => match verify_token(&token) {
-                        Ok(raw_id) => {
-                            let user_id = UserId(raw_id);
-                            current_user_id = Some(user_id.clone());
+        if let Message::Text(text) = msg
+            && let Ok(client_msg) = serde_json::from_str::<ClientMessage>(&text)
+        {
+            match client_msg {
+                ClientMessage::Identify { token } => match verify_token(&token) {
+                    Ok(raw_id) => {
+                        let user_id = UserId(raw_id);
+                        current_user_id = Some(user_id.clone());
 
-                            println!("Socket {} authenticated as {}", socket_id, user_id.0);
+                        println!("Socket {} authenticated as {}", socket_id, user_id.0);
 
-                            if let Err(e) =
-                                identity::handle_identify(&state, user_id, tx.clone()).await
-                            {
-                                eprintln!("Failed to identify user: {}", e);
-                            }
-                        }
-
-                        Err(e) => {
-                            eprintln!("Socket {} provided invalid token: {}", socket_id, e);
-                        }
-                    },
-                    ClientMessage::Chat {
-                        channel_id,
-                        content,
-                    } => {
-                        if let Some(uid) = &current_user_id {
-                            let _ =
-                                chat::handle_chat(channel_id, content, &state, uid.clone()).await;
-                        } else {
-                            eprintln!("Unauthenticated socket tried to chat!");
+                        if let Err(e) = identity::handle_identify(&state, user_id, tx.clone()).await
+                        {
+                            eprintln!("Failed to identify user: {}", e);
                         }
                     }
-                    ClientMessage::SetPresence { presence } => {
-                        if let Some(uid) = &current_user_id {
-                            let _ = presence::set_presence(&state, uid, &presence).await;
-                        }
+
+                    Err(e) => {
+                        eprintln!("Socket {} provided invalid token: {}", socket_id, e);
                     }
-                    _ => {}
+                },
+                ClientMessage::Chat {
+                    channel_id,
+                    content,
+                } => {
+                    if let Some(uid) = &current_user_id {
+                        let _ = chat::handle_chat(channel_id, content, &state, uid.clone()).await;
+                    } else {
+                        eprintln!("Unauthenticated socket tried to chat!");
+                    }
                 }
+                ClientMessage::SetPresence { presence } => {
+                    if let Some(uid) = &current_user_id {
+                        let _ = presence::set_presence(&state, uid, &presence).await;
+                    }
+                }
+                _ => {}
             }
         }
     }
@@ -84,10 +82,7 @@ async fn handle_socket(socket: WebSocket, state: SharedState) {
     if let Some(user_id) = current_user_id {
         println!("User {} disconnected.", user_id.0);
 
-        {
-            let mut guard = state.lock().await;
-            guard.sessions.remove(&user_id);
-        }
+        state.sessions.write().unwrap().remove(&user_id);
 
         let _ = identity::handle_disconnect(&state, user_id).await;
     } else {

@@ -12,7 +12,7 @@ pub async fn handle_chat(
     state: &SharedState,
     author_id: UserId,
 ) -> Result<(), String> {
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     let channel = Channels::find_by_id(channel_id.0.clone())
         .one(&db)

@@ -11,9 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as GRouteImport } from './routes/g'
 import { Route as GAtmeRouteImport } from './routes/g/@me'
-import { Route as GChanneldRouteImport } from './routes/g/$channeld'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as GGuildIdChanneldRouteImport } from './routes/g/$guildId.$channeld'
 
 const GRoute = GRouteImport.update({
   id: '/g',
@@ -23,11 +23,6 @@ const GRoute = GRouteImport.update({
 const GAtmeRoute = GAtmeRouteImport.update({
   id: '/@me',
   path: '/@me',
-  getParentRoute: () => GRoute,
-} as any)
-const GChanneldRoute = GChanneldRouteImport.update({
-  id: '/$channeld',
-  path: '/$channeld',
   getParentRoute: () => GRoute,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -40,41 +35,56 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GGuildIdChanneldRoute = GGuildIdChanneldRouteImport.update({
+  id: '/$guildId/$channeld',
+  path: '/$guildId/$channeld',
+  getParentRoute: () => GRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/g': typeof GRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
-  '/g/$channeld': typeof GChanneldRoute
   '/g/@me': typeof GAtmeRoute
+  '/g/$guildId/$channeld': typeof GGuildIdChanneldRoute
 }
 export interface FileRoutesByTo {
   '/g': typeof GRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
-  '/g/$channeld': typeof GChanneldRoute
   '/g/@me': typeof GAtmeRoute
+  '/g/$guildId/$channeld': typeof GGuildIdChanneldRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/g': typeof GRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
-  '/g/$channeld': typeof GChanneldRoute
   '/g/@me': typeof GAtmeRoute
+  '/g/$guildId/$channeld': typeof GGuildIdChanneldRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/g' | '/auth/login' | '/auth/register' | '/g/$channeld' | '/g/@me'
+  fullPaths:
+    | '/g'
+    | '/auth/login'
+    | '/auth/register'
+    | '/g/@me'
+    | '/g/$guildId/$channeld'
   fileRoutesByTo: FileRoutesByTo
-  to: '/g' | '/auth/login' | '/auth/register' | '/g/$channeld' | '/g/@me'
+  to:
+    | '/g'
+    | '/auth/login'
+    | '/auth/register'
+    | '/g/@me'
+    | '/g/$guildId/$channeld'
   id:
     | '__root__'
     | '/g'
     | '/auth/login'
     | '/auth/register'
-    | '/g/$channeld'
     | '/g/@me'
+    | '/g/$guildId/$channeld'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -99,13 +109,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GAtmeRouteImport
       parentRoute: typeof GRoute
     }
-    '/g/$channeld': {
-      id: '/g/$channeld'
-      path: '/$channeld'
-      fullPath: '/g/$channeld'
-      preLoaderRoute: typeof GChanneldRouteImport
-      parentRoute: typeof GRoute
-    }
     '/auth/register': {
       id: '/auth/register'
       path: '/auth/register'
@@ -120,17 +123,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/g/$guildId/$channeld': {
+      id: '/g/$guildId/$channeld'
+      path: '/$guildId/$channeld'
+      fullPath: '/g/$guildId/$channeld'
+      preLoaderRoute: typeof GGuildIdChanneldRouteImport
+      parentRoute: typeof GRoute
+    }
   }
 }
 
 interface GRouteChildren {
-  GChanneldRoute: typeof GChanneldRoute
   GAtmeRoute: typeof GAtmeRoute
+  GGuildIdChanneldRoute: typeof GGuildIdChanneldRoute
 }
 
 const GRouteChildren: GRouteChildren = {
-  GChanneldRoute: GChanneldRoute,
   GAtmeRoute: GAtmeRoute,
+  GGuildIdChanneldRoute: GGuildIdChanneldRoute,
 }
 
 const GRouteWithChildren = GRoute._addFileChildren(GRouteChildren)

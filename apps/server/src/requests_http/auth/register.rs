@@ -23,7 +23,7 @@ pub async fn register(
     State(state): State<SharedState>,
     Json(payload): Json<RegisterRequest>,
 ) -> Result<Json<AuthResponse>, (StatusCode, String)> {
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     let existing_user = Users::find()
         .filter(

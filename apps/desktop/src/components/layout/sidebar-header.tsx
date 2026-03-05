@@ -54,20 +54,26 @@ export function SidebarHeader({
             <DropdownMenuSeparator className="bg-white/10" />
           )}
 
-          {guilds.map((guild) => (
-            <DropdownMenuItem
-              key={guild.id}
-              asChild
-              className="cursor-pointer focus:text-white"
-            >
-              <Link to={`/g/${guild.id}`} className="flex w-full items-center">
-                <div className="mr-2 flex size-5 items-center justify-center rounded bg-white/10 text-[10px] font-bold">
-                  {guild.name.charAt(0)}
-                </div>
-                <span className="truncate">{guild.name}</span>
-              </Link>
-            </DropdownMenuItem>
-          ))}
+          {guilds.map((guild) => {
+            console.log("Guild: ", guild);
+            return (
+              <DropdownMenuItem
+                key={guild.id}
+                asChild
+                className="cursor-pointer focus:text-white"
+              >
+                <Link
+                  to={`/g/${guild.id}/${guild.channels[0]}`}
+                  className="flex w-full items-center"
+                >
+                  <div className="mr-2 flex size-5 items-center justify-center rounded bg-white/10 text-[10px] font-bold">
+                    {guild.name.charAt(0)}
+                  </div>
+                  <span className="truncate">{guild.name}</span>
+                </Link>
+              </DropdownMenuItem>
+            );
+          })}
           <DropdownMenuSeparator className="bg-white/10" />
           <DropdownMenuItem
             onClick={() => setCreateDialogOpen(true)}

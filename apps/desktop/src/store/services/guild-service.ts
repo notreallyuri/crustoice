@@ -1,5 +1,7 @@
 import { StateCreator } from "zustand";
 import { AppStore, GuildRepository } from "../types";
+import { invoke } from "@tauri-apps/api/core";
+import { Guild } from "@/types";
 
 export const createGuildService: StateCreator<
   AppStore,
@@ -7,8 +9,8 @@ export const createGuildService: StateCreator<
   [],
   GuildRepository
 > = (set, get, _) => ({
-  createGuild: async (name) => {
-    console.log("createGuild stub", name);
+  createGuild: async (payload, iconPath) => {
+    await invoke<Guild>("create_guild", { payload, iconPath });
 
     get().getGuilds();
   },

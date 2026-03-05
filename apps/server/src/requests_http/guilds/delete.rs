@@ -1,7 +1,6 @@
-use crate::{entities::prelude::*, services::jwt::verify_token, state::SharedState};
+use crate::{entities::prelude::*, extractors::auth::AuthedUser, state::SharedState};
 use axum::{
     extract::{Path, State},
-    http::HeaderMap,
     http::StatusCode,
 };
 use sea_orm::EntityTrait;
@@ -9,24 +8,10 @@ use shared::structures::GuildId;
 
 pub async fn delete_guild(
     State(state): State<SharedState>,
-    headers: HeaderMap,
     Path(guild_id): Path<GuildId>,
+    AuthedUser(user_id): AuthedUser,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let auth_header = headers
-        .get("Authorization")
-        .and_then(|h| h.to_str().ok())
-        .ok_or((
-            StatusCode::UNAUTHORIZED,
-            "Missing Authorization header".to_string(),
-        ))?;
-
-    let token = auth_header
-        .strip_prefix("Bearer ")
-        .ok_or((StatusCode::UNAUTHORIZED, "Invalid token format".to_string()))?;
-
-    let user_id = verify_token(token).map_err(|e| (StatusCode::UNAUTHORIZED, e))?;
-
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     let guild = Guilds::find_by_id(guild_id.0.clone())
         .one(&db)

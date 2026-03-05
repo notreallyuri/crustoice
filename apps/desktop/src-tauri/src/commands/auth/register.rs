@@ -1,4 +1,4 @@
-use crate::{client_state::ClientState, API_URL};
+use crate::{client_state::ClientState, general::upload::upload_internal, API_URL};
 use serde_json::json;
 use shared::{
     requests::{AuthResponse, RegisterRequest},
@@ -11,6 +11,7 @@ use tauri_plugin_store::StoreExt;
 pub async fn register(
     payload: RegisterRequest,
     state: State<'_, ClientState>,
+    avatar_path: Option<String>,
     app_handle: AppHandle,
 ) -> Result<UserId, String> {
     let client = reqwest::Client::new();
@@ -41,6 +42,18 @@ pub async fn register(
     {
         let mut store_guard = state.store.lock().await;
         store_guard.jwt_token = Some(auth_data.token);
+    }
+
+    if let Some(path) = avatar_path {
+        let ext = std::path::Path::new(&path)
+            .extension()
+            .and_then(|s| s.to_str())
+            .unwrap_or("png")
+            .to_string();
+
+        let id_str = auth_data.user_id.0.to_string();
+
+        upload_internal(&state, "avatar", &id_str, &ext, &path).await?;
     }
 
     Ok(auth_data.user_id)

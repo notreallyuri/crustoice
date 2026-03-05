@@ -1,16 +1,25 @@
+import { useAppStore } from "@/store/app-store";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 export function SplashScreen() {
+  const initSession = useAppStore((s) => s.initSession);
+  const navigate = useNavigate();
+
   useEffect(() => {
     async function checkAuth() {
-      await new Promise((res) => setTimeout(res, 1500));
-
-      await invoke("close_splashscreen");
+      try {
+        await invoke("check_auth");
+      } catch (e) {
+        console.log("No saved session found:", e);
+      } finally {
+        await invoke("close_splashscreen");
+      }
     }
 
-    checkAuth();
-  }, []);
+    setTimeout(checkAuth, 500);
+  }, [initSession, navigate]);
 
   return (
     <div className="flex h-screen w-screen flex-col items-center justify-center bg-background dark text-white">

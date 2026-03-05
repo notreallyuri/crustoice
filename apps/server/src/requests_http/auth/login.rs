@@ -13,7 +13,7 @@ pub async fn login(
     State(state): State<SharedState>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<Json<AuthResponse>, (StatusCode, String)> {
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     let user = Users::find()
         .filter(users::Column::Email.eq(payload.email))

@@ -13,6 +13,9 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "./ui/field";
 import { useAppStore } from "@/store/app-store";
 import { Camera, X } from "lucide-react";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { readFile } from "@tauri-apps/plugin-fs";
 
 type Props = {
   isOpen: boolean;
@@ -23,8 +26,9 @@ export function DialogCreateGuild({ isOpen, setIsOpen }: Props) {
   const createGuild = useAppStore((s) => s.createGuild);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [_selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePath, setImagePath] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
@@ -38,41 +42,59 @@ export function DialogCreateGuild({ isOpen, setIsOpen }: Props) {
           .max(24, "Guild titles must be at most 24 characters")
       })
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: async ({ value: payload }) => {
       try {
-        await createGuild(value.name);
+        await createGuild(payload, imagePath);
         setIsOpen(false);
         form.reset();
       } catch (e) {
-        console.error("Failed to create guild:", e);
+        toast.error("Failed to create guild. Please try again.", {
+          description: String(e)
+        });
       }
     }
   });
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
+  const handleReset = (open: boolean) => {
     if (!open) {
       form.reset();
+      setPreviewUrl(null);
+      setImagePath(null);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+  const handleSelectImage = async () => {
+    try {
+      const selected = await openDialog({
+        multiple: false,
+        filters: [
+          {
+            name: "Image",
+            extensions: ["png", "jpg", "jpeg", "gif", "webp"]
+          }
+        ]
+      });
+
+      if (selected && typeof selected === "string") {
+        setImagePath(selected);
+        const fileBytes = await readFile(selected);
+        const blob = new Blob([fileBytes]);
+        setPreviewUrl(URL.createObjectURL(blob));
+      }
+    } catch (err) {
+      toast.error("Could not open file dialog");
     }
   };
 
   const clearImage = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl); // Prevent memory leaks
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
-    setSelectedFile(null);
+    setImagePath(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleReset}>
       <DialogTrigger asChild></DialogTrigger>
       <DialogContent className="dark text-foreground">
         <DialogHeader>
@@ -90,7 +112,7 @@ export function DialogCreateGuild({ isOpen, setIsOpen }: Props) {
             <div className="relative">
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleSelectImage}
                 className="group relative flex size-24 cursor-pointer items-center justify-center border-2 border-dashed border-border bg-background transition-colors hover:border-primary hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 {previewUrl ? (
@@ -124,15 +146,6 @@ export function DialogCreateGuild({ isOpen, setIsOpen }: Props) {
                   <X className="size-4" />
                 </button>
               )}
-
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/png, image/jpeg, image/webp, image/gif"
-                className="hidden"
-                aria-hidden="true"
-              />
             </div>
           </div>
           <form.Field

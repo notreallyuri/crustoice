@@ -13,9 +13,9 @@ use shared::{
 
 pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Result<(), String> {
     let user_data = {
-        let guard = state.lock().await;
+        let db = state.db.clone();
         Users::find_by_id(user_id.0.clone())
-            .one(&guard.db)
+            .one(&db)
             .await
             .map_err(|e| e.to_string())?
     };
@@ -25,16 +25,13 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
         None => return Err("User not found".to_string()),
     };
 
-    {
-        let mut guard = state.lock().await;
-        guard.sessions.insert(
-            user_id.clone(),
-            ActiveSession {
-                tx: tx.clone(),
-                user_id: user_id.clone(),
-            },
-        );
-    }
+    state.sessions.write().unwrap().insert(
+        user_id.clone(),
+        ActiveSession {
+            tx: tx.clone(),
+            user_id: user_id.clone(),
+        },
+    );
 
     let initial_presence = UserPresence {
         status: PresenceStatus::Online,
@@ -79,9 +76,7 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
 
     let welcome = ServerMessage::IdentityValidated { user };
 
-    let guard = state.lock().await;
-    guard.send_to_user(&user_id, &welcome);
-    drop(guard);
+    state.send_to_user(&user_id, &welcome);
 
     if let Ok((guilds, relationships)) =
         crate::services::data_loader::load_initial_state(state, &user_id).await
@@ -91,8 +86,7 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
             relationships,
         };
 
-        let guard = state.lock().await;
-        guard.send_to_user(&user_id, &initial_state_msg);
+        state.send_to_user(&user_id, &initial_state_msg);
     }
 
     Ok(())
@@ -105,9 +99,9 @@ pub async fn handle_disconnect(state: &SharedState, user_id: UserId) {
         activity: None,
     };
 
-    let _ = presence::set_presence(&state, &user_id, &base_presence).await;
+    let _ = presence::set_presence(state, &user_id, &base_presence).await;
 
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     if let Ok(Some(profile)) = user_service::get_user_profile(&db, &user_id).await {
         let public_user = shared::structures::UserPublic {
@@ -120,7 +114,7 @@ pub async fn handle_disconnect(state: &SharedState, user_id: UserId) {
             },
         };
 
-        let offline_message = ServerMessage::PresenceUpdate { user: public_user };
+        let _offline_message = ServerMessage::PresenceUpdate { user: public_user };
 
         // TODO: Implement broadcast service
     }

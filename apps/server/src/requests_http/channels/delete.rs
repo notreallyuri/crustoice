@@ -10,7 +10,7 @@ pub async fn delete_channel(
     State(state): State<SharedState>,
     Path(channel_id): Path<ChannelId>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     let delete_res = Channels::delete_by_id(channel_id.0)
         .exec(&db)

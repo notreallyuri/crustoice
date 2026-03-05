@@ -12,6 +12,7 @@ pub struct Model {
     pub owner_id: String,
     pub banner_url: Option<String>,
     pub icon_url: Option<String>,
+    pub default_channe_id: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -18,7 +18,7 @@ pub async fn get_channel_history(
     Path(channel_id): Path<ChannelId>,
     Query(query): Query<HistoryQuery>,
 ) -> Result<Json<Vec<Message>>, (StatusCode, String)> {
-    let db = { state.lock().await.db.clone() };
+    let db = state.db.clone();
 
     let mut condition = Condition::all().add(messages::Column::ChannelId.eq(channel_id.0.clone()));
 

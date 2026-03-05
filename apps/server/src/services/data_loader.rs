@@ -11,12 +11,12 @@ pub async fn load_initial_state(
     state: &SharedState,
     user_id: &UserId,
 ) -> Result<(Vec<Guild>, Vec<UserRelationship>), String> {
-    let db = &state.lock().await.db;
+    let db = state.db.clone();
 
     let my_guilds: Vec<(guilds::Model, Vec<guild_members::Model>)> = Guilds::find()
         .find_with_related(GuildMembers)
         .filter(guild_members::Column::UserId.eq(user_id.0.clone()))
-        .all(db)
+        .all(&db)
         .await
         .map_err(|e| e.to_string())?;
 
@@ -25,7 +25,7 @@ pub async fn load_initial_state(
     for (guild_model, _member) in my_guilds {
         let channel_models = Channels::find()
             .filter(channels::Column::GuildId.eq(guild_model.id.clone()))
-            .all(db)
+            .all(&db)
             .await
             .unwrap_or_default();
 
@@ -56,7 +56,7 @@ pub async fn load_initial_state(
     let my_relationships: Vec<(relationships::Model, Option<users::Model>)> = Relationships::find()
         .filter(relationships::Column::UserId.eq(user_id.0.clone()))
         .find_also_related(Users)
-        .all(db)
+        .all(&db)
         .await
         .map_err(|e| e.to_string())?;
 
