@@ -13,6 +13,7 @@ pub struct Model {
     pub locale: String,
     pub developer_mode: bool,
     pub notifications_active: bool,
+    pub theme_dark_mode: String,
     pub theme_color: String,
     pub theme_rounding: String,
     pub theme_spacing: String,
@@ -50,6 +51,7 @@ impl From<Model> for UserSettings {
                 active: model.notifications_active,
             },
             ui: UISettings {
+                dark_mode: model.theme_dark_mode,
                 theme: model.theme_color,
                 rounding: model.theme_rounding,
                 spacing: model.theme_spacing,
