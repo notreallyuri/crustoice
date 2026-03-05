@@ -5,7 +5,7 @@ use axum::{Json, extract::State, http::StatusCode};
 use bcrypt::verify;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use shared::{
-    requests::{AuthResponse, LoginRequest},
+    http::prelude::{AuthResponse, LoginRequest},
     structures::UserId,
 };
 

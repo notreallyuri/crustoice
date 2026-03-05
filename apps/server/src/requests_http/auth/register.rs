@@ -8,15 +8,8 @@ use crate::services::jwt::create_token;
 use crate::state::SharedState;
 
 use shared::{
-    requests::{AuthResponse, RegisterRequest},
-    structures::{
-        UserId, UserSettings,
-        user_settings::{
-            locale::Locale,
-            notifications::NotificationSettings,
-            ui::{UISettings, UITheme},
-        },
-    },
+    http::prelude::{AuthResponse, RegisterRequest},
+    structures::UserId,
 };
 
 pub async fn register(
@@ -64,14 +57,6 @@ pub async fn register(
         password_hash: Set(hashed_password),
         bio: Set(None),
         avatar_url: Set(None),
-        settings: Set(UserSettings {
-            locale: Locale::EnUS,
-            ui: UISettings {
-                theme: UITheme::DefaultDark,
-            },
-            notifications: NotificationSettings { active: true },
-            developer_mode: false,
-        }),
     };
 
     Users::insert(new_user)

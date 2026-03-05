@@ -29,6 +29,10 @@ export interface Guild {
   id: GuildId;
   owner_id: UserId;
   name: string;
+  icon_url: string | null;
+  banner_url: string | null;
+
+  default_channel_id: ChannelId;
 
   members: UserId[];
   categories: ChannelCategory[];

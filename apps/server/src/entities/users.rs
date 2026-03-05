@@ -16,8 +16,6 @@ pub struct Model {
     pub display_name: Option<String>,
     pub avatar_url: Option<String>,
     pub bio: Option<String>,
-    #[sea_orm(column_type = "JsonBinary")]
-    pub settings: Json,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -1,8 +1,7 @@
+use crate::structures::{CategoryId, UserId};
 use serde::{Deserialize, Serialize};
 
-use crate::structures::{CategoryId, UserId};
-
-// --- User ---
+// --- Auth ---
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LoginRequest {
@@ -18,12 +17,7 @@ pub struct RegisterRequest {
     pub display_name: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AuthResponse {
-    pub user_id: UserId,
-    pub username: String,
-    pub token: String,
-}
+// --- User ---
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateProfileRequest {
@@ -51,13 +45,6 @@ pub struct CreateInviteRequest {
     pub max_uses: i32,
     pub expires_in_seconds: Option<i64>,
     pub requires_approval: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct InviteResponse {
-    pub invite_code: String,
-    pub guild_id: String,
-    pub expires_at: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

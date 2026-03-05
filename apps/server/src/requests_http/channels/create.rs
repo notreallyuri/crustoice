@@ -12,7 +12,7 @@ use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter,
 };
 use shared::{
-    requests::CreateChannelRequest,
+    http::requests::CreateChannelRequest,
     structures::{ChannelId, GuildId, MessageChannel},
 };
 use uuid::Uuid;

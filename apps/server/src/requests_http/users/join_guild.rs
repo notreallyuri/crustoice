@@ -1,7 +1,7 @@
 use crate::{entities::guild_members, extractors::auth::AuthedUser, state::SharedState};
 use axum::{Json, extract::State, http::StatusCode};
 use sea_orm::{ActiveModelTrait, Set};
-use shared::requests::GuildInviteRequest;
+use shared::http::requests::GuildInviteRequest;
 
 pub async fn join_guild(
     State(state): State<SharedState>,

@@ -9,7 +9,7 @@ use axum::{
 };
 use sea_orm::{ColumnTrait, Condition, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use shared::{
-    requests::HistoryQuery,
+    http::requests::HistoryQuery,
     structures::{ChannelId, Message, MessageId, UserId},
 };
 

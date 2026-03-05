@@ -7,17 +7,13 @@ export const createChannelService: StateCreator<
   [],
   ChannelRepository
 > = (set) => ({
-  createChannel: async (guildId, name, categoryId) => {
-    console.log("createChannel stub", {
-      guildId,
-      name,
-      categoryId
-    });
+  createChannel: async (payload) => {
+    console.log("createChannel stub", { payload });
   },
   deleteChannel: async (channelId) => {
     console.log("deleteChannel stub", channelId);
   },
-  selectChannel: async (guildId, channelId) => {
-    set({ activeGuildId: guildId, activeChannelId: channelId });
+  selectChannel: async (activeGuildId, activeChannelId) => {
+    set({ activeGuildId, activeChannelId });
   }
 });

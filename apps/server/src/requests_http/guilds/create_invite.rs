@@ -10,7 +10,7 @@ use axum::{
 };
 use sea_orm::{ActiveModelTrait, EntityTrait, Set};
 use shared::{
-    requests::{CreateInviteRequest, InviteResponse},
+    http::prelude::{CreateInviteRequest, InviteResponse},
     structures::GuildId,
 };
 use uuid::Uuid;

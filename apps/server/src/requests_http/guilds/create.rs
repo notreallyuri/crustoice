@@ -2,9 +2,9 @@ use crate::entities::{channels, guilds};
 use crate::extractors::auth::AuthedUser;
 use crate::{entities::guild_members, state::SharedState};
 use axum::{Json, extract::State, http::StatusCode};
-use sea_orm::{ActiveModelTrait, Set};
+use sea_orm::{ActiveModelTrait, Set, TransactionTrait};
 use shared::{
-    requests::CreateGuildRequest,
+    http::requests::CreateGuildRequest,
     structures::{ChannelId, Guild, GuildId, MessageChannel, UserId},
 };
 use uuid::Uuid;
@@ -24,6 +24,7 @@ pub async fn create_guild(
         id: Set(guild_id.clone()),
         owner_id: Set(user_id.clone()),
         name: Set(payload.name.clone()),
+        default_channel_id: Set(None),
         banner_url: Set(None),
         icon_url: Set(None),
     };
@@ -44,18 +45,35 @@ pub async fn create_guild(
         category_id: Set(None),
     };
 
-    new_guild
-        .insert(&db)
+    let txn = db
+        .begin()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let inserted_guild = new_guild
+        .insert(&txn)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     new_member
-        .insert(&db)
+        .insert(&txn)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let inserted_channel = new_channel
-        .insert(&db)
+        .insert(&txn)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let mut guild_to_update: guilds::ActiveModel = inserted_guild.into();
+    guild_to_update.default_channel_id = Set(Some(channel_id.clone()));
+
+    guild_to_update
+        .update(&txn)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    txn.commit()
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -75,6 +93,7 @@ pub async fn create_guild(
         icon_url: None,
         banner_url: None,
         members: Vec::new(),
+        default_channel_id: Some(general_channel.id.clone()),
         categories: Vec::new(),
         channels: vec![general_channel],
     };

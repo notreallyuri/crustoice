@@ -1,30 +1,18 @@
 pub use sea_orm_migration::prelude::*;
 
-mod m20220101_000001_create_table;
-mod m20260217_234756_create_guild_members;
-mod m20260218_031048_create_relationships_table;
-mod m20260220_212031_create_messages_table;
-mod m20260222_153059_create_categories;
-mod m20260222_160429_alter_guilds;
-mod m20260224_165754_create_invite_table;
-mod m20260225_010640_alter_users;
-mod m20260305_150517_alter_guilds_default_channel;
-
 pub struct Migrator;
+
+mod m20260305_204328_create_users;
+mod m20260305_204331_create_guilds;
+mod m20260305_204433_create_messages;
 
 #[async_trait::async_trait]
 impl MigratorTrait for Migrator {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         vec![
-            Box::new(m20220101_000001_create_table::Migration),
-            Box::new(m20260217_234756_create_guild_members::Migration),
-            Box::new(m20260218_031048_create_relationships_table::Migration),
-            Box::new(m20260220_212031_create_messages_table::Migration),
-            Box::new(m20260222_153059_create_categories::Migration),
-            Box::new(m20260222_160429_alter_guilds::Migration),
-            Box::new(m20260224_165754_create_invite_table::Migration),
-            Box::new(m20260225_010640_alter_users::Migration),
-            Box::new(m20260305_150517_alter_guilds_default_channel::Migration),
+            Box::new(m20260305_204328_create_users::Migration),
+            Box::new(m20260305_204331_create_guilds::Migration),
+            Box::new(m20260305_204433_create_messages::Migration),
         ]
     }
 }

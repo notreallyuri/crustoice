@@ -9,4 +9,5 @@ pub mod guilds;
 pub mod invites;
 pub mod messages;
 pub mod relationships;
+pub mod user_settings;
 pub mod users;

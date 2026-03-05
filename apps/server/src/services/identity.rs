@@ -60,7 +60,9 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
 
         settings: UserSettings {
             ui: UISettings {
-                theme: shared::structures::user_settings::ui::UITheme::DefaultDark,
+                theme: "test".to_string(),
+                rounding: "test".to_string(),
+                spacing: "test".to_string(),
             },
             locale: Locale::EnUS,
             notifications: NotificationSettings { active: true },
@@ -77,17 +79,6 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
     let welcome = ServerMessage::IdentityValidated { user };
 
     state.send_to_user(&user_id, &welcome);
-
-    if let Ok((guilds, relationships)) =
-        crate::services::data_loader::load_initial_state(state, &user_id).await
-    {
-        let initial_state_msg = ServerMessage::InitialState {
-            guilds,
-            relationships,
-        };
-
-        state.send_to_user(&user_id, &initial_state_msg);
-    }
 
     Ok(())
 }
