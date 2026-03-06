@@ -6,8 +6,8 @@ export type PresenceStatus =
   | "busy"
   | "invisible"
   | "offline";
-
-export type UITheme = "DefaultLight" | "DefaultDark";
+export type UIDarkMode = "system" | "light" | "dark";
+export type UITheme = "default" | "strawberry" | "blueberry";
 export type Locale = "en-US" | "pt-BR";
 export type ActivityKind = "playing" | "streaming" | "listening" | "watching";
 
@@ -43,6 +43,7 @@ export interface UserActivity {
 
 export interface UserSettings {
   ui: {
+    dark_mode: UIDarkMode;
     theme: UITheme;
   };
   notifications: {
