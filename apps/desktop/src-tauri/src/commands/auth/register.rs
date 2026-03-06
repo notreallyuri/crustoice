@@ -1,7 +1,7 @@
 use crate::{client_state::ClientState, general::upload::upload_internal, API_URL};
 use serde_json::json;
 use shared::{
-    requests::{AuthResponse, RegisterRequest},
+    http::{requests::RegisterRequest, responses::AuthResponse},
     structures::UserId,
 };
 use tauri::{AppHandle, State};

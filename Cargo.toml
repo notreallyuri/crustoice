@@ -1,6 +1,11 @@
 [workspace]
-members = ["apps/server", "apps/desktop/src-tauri", "packages/shared", "migration"]
-resolver = "2"
+resolver = "3"
+members = [
+  "apps/server",
+  "apps/desktop/src-tauri",
+  "packages/shared",
+  "migration",
+]
 
 [workspace.dependencies]
 serde = { version = "1.0.228", features = ["derive"] }

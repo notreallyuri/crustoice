@@ -1,7 +1,7 @@
 use crate::API_URL;
 use serde_json::json;
 use shared::{
-    requests::{AuthResponse, LoginRequest},
+    http::{requests::LoginRequest, responses::AuthResponse},
     structures::UserId,
 };
 use tauri::{AppHandle, State};

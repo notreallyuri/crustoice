@@ -1,5 +1,5 @@
 use crate::{client_state::ClientState, general::upload::upload_internal, API_URL};
-use shared::{requests::CreateGuildRequest, structures::Guild};
+use shared::{http::requests::CreateGuildRequest, structures::Guild};
 use tauri::State;
 
 #[tauri::command]
