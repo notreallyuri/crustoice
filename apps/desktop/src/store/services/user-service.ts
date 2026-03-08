@@ -31,5 +31,27 @@ export const createUserService: StateCreator<
     const guilds: Guild[] = await invoke<Guild[]>("get_guilds");
 
     set({ guilds });
+  },
+  async leaveGuild(guildId) {
+    await invoke("leave_guild", { guildId });
+    set({ activeGuildId: null, activeChannelId: null });
+    get().getGuilds();
+  },
+
+  async updateProfile(payload, crop) {
+    await invoke("update_profile", { payload, crop });
+    await get().getMe();
+  },
+  async updateUsername(payload) {
+    await invoke("update_username", { payload });
+    await get().getMe();
+  },
+  async updateEmail(payload) {
+    await invoke("update_email", { payload });
+    await get().getMe();
+  },
+  async updatePassword(payload) {
+    await invoke("update_password", { payload });
+    await get().getMe();
   }
 });

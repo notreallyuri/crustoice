@@ -8,20 +8,24 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Camera, Eye, EyeClosed, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import z from "zod";
-import { readFile } from "@tauri-apps/plugin-fs";
+import { DialogCropper } from "@/components/dialogs/dialog-cropper";
+import { useImageSelection } from "@/hooks/use-image-selection";
+import { CropResult } from "@/components/kibo-ui/image-crop";
 
 export const Route = createFileRoute("/auth/register")({
   component: RouteComponent
 });
 
 function RouteComponent() {
+  const { previewUrl, handleSelectImage, clearSelection, originalPath } =
+    useImageSelection();
   const navigate = useNavigate();
 
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [imagePath, setImagePath] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  const [cropMath, setCropMath] = useState<CropResult | undefined>();
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
 
   const register = useAppStore((s) => s.register);
   const form = useForm({
@@ -41,7 +45,7 @@ function RouteComponent() {
     },
     onSubmit: async ({ value }) => {
       try {
-        await register(value, imagePath);
+        await register(value, originalPath, cropMath);
 
         navigate({ to: "/g/@me" });
       } catch (e) {
@@ -50,38 +54,25 @@ function RouteComponent() {
     }
   });
 
-  const handleSelectImage = async () => {
-    try {
-      const selected = await openDialog({
-        multiple: false,
-        filters: [
-          {
-            name: "Image",
-            extensions: ["png", "jpg", "jpeg", "gif", "webp"]
-          }
-        ]
-      });
-
-      if (selected && typeof selected === "string") {
-        setImagePath(selected);
-        const fileBytes = await readFile(selected);
-        const blob = new Blob([fileBytes]);
-        setPreviewUrl(URL.createObjectURL(blob));
-      }
-    } catch (err) {
-      toast.error("Could not open file dialog");
+  useEffect(() => {
+    if (previewUrl) {
+      setIsCropperOpen(true);
     }
-  };
+  }, [previewUrl]);
 
-  const clearImage = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(null);
-    setImagePath(null);
-  };
+  function handleCropSuccess(math: CropResult) {
+    setCropMath(math);
+    setIsCropperOpen(false);
+  }
+
+  function handleRemoveImage() {
+    clearSelection();
+    setCropMath(undefined);
+  }
 
   useEffect(() => {
     console.log("Preview URL changed:", previewUrl);
-    console.log("Current image path:", imagePath);
+    console.log("Current image path:", originalPath);
   }, [previewUrl]);
 
   return (
@@ -104,23 +95,23 @@ function RouteComponent() {
                 <button
                   type="button"
                   onClick={handleSelectImage}
-                  className="group relative flex size-24 cursor-pointer items-center justify-center border-2 border-dashed border-border bg-background transition-colors hover:border-primary hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="group relative rounded-full flex size-24 cursor-pointer items-center justify-center border-2 border-dashed border-border bg-background transition-colors hover:border-primary hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {previewUrl ? (
                     <>
                       <img
                         src={previewUrl}
                         alt="Guild Icon Preview"
-                        className="size-full object-cover"
+                        className="size-full object-cover rounded-full"
                       />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                         <Camera className="size-8 text-border" />
                       </div>
                     </>
                   ) : (
                     <>
                       <Camera className="size-8 text-muted-foreground transition-colors group-hover:text-primary" />
-                      <div className="absolute -right-2 -top-2 flex size-6 items-center justify-center bg-primary text-primary-foreground shadow-sm group-hover:bg-primary/90">
+                      <div className="absolute right-0 top-0 rounded-full flex size-6 items-center justify-center bg-primary text-primary-foreground shadow-sm group-hover:bg-primary/90">
                         <span className="text-xl font-bold leading-none">
                           +
                         </span>
@@ -132,8 +123,8 @@ function RouteComponent() {
                 {previewUrl && (
                   <button
                     type="button"
-                    onClick={clearImage}
-                    className="absolute -right-2 -top-2 flex size-6 items-center justify-center  bg-destructive text-destructive-foreground shadow-sm cursor-pointer hover:bg-destructive/60 transition-opacity"
+                    onClick={handleRemoveImage}
+                    className="absolute right-0 top-0 flex size-6 items-center justify-center  bg-destructive text-destructive-foreground shadow-sm cursor-pointer hover:bg-destructive/60 transition-opacity"
                     title="Remove image"
                   >
                     <X className="size-4" />
@@ -276,6 +267,12 @@ function RouteComponent() {
           </p>
         </CardContent>
       </Card>
+      <DialogCropper
+        isOpen={isCropperOpen}
+        previewUrl={previewUrl}
+        onClose={() => setIsCropperOpen(false)}
+        onSuccess={handleCropSuccess}
+      />
     </div>
   );
 }

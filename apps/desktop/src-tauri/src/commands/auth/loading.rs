@@ -2,10 +2,10 @@ use shared::structures::UserId;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_store::StoreExt;
 
-use crate::client_state::ClientState;
+use crate::{client_state::ClientState, structures::error::AppError};
 
 #[tauri::command]
-pub async fn close_splashscreen(app_handle: AppHandle) -> Result<(), String> {
+pub async fn close_splashscreen(app_handle: AppHandle) -> Result<(), AppError> {
     if let Some(splashscreen) = app_handle.get_webview_window("splashscreen") {
         splashscreen.close().map_err(|e| e.to_string())?;
     }
@@ -22,7 +22,7 @@ pub async fn close_splashscreen(app_handle: AppHandle) -> Result<(), String> {
 pub async fn check_auth(
     state: State<'_, ClientState>,
     app_handle: AppHandle,
-) -> Result<UserId, String> {
+) -> Result<UserId, AppError> {
     println!("🔍 Running check_auth...");
 
     let store = app_handle.store("auth.json").map_err(|e| {

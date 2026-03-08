@@ -1,4 +1,7 @@
-use crate::{client_state::ClientState, general::upload::upload_internal, API_URL};
+use crate::{
+    client_state::ClientState, general::upload::upload_internal, structures::error::AppError,
+    API_URL,
+};
 use shared::{http::requests::CreateGuildRequest, structures::Guild};
 use tauri::State;
 
@@ -7,7 +10,7 @@ pub async fn create_guild(
     payload: CreateGuildRequest,
     state: State<'_, ClientState>,
     icon_path: Option<String>,
-) -> Result<Guild, String> {
+) -> Result<Guild, AppError> {
     let token = {
         let store = state.store.lock().await;
         store
@@ -16,11 +19,8 @@ pub async fn create_guild(
             .ok_or("No active session".to_string())?
     };
 
-    let client = reqwest::Client::new();
-
-    print!("Attempting to create guild with name: {}", payload.name);
-
-    let res = client
+    let res = state
+        .http
         .post(format!("{}/guilds", API_URL))
         .header("Authorization", format!("Bearer {}", token))
         .json(&payload)
@@ -29,10 +29,7 @@ pub async fn create_guild(
         .map_err(|e| e.to_string())?;
 
     if !res.status().is_success() {
-        return Err(format!(
-            "Failed to create guild with status: {}",
-            res.status()
-        ));
+        return Err(AppError::from_res(res, "Guild Create").await);
     }
 
     let data: Guild = res

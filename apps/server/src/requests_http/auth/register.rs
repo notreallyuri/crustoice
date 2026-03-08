@@ -1,9 +1,11 @@
 use axum::{Json, extract::State, http::StatusCode};
 use bcrypt::{DEFAULT_COST, hash};
-use sea_orm::{ColumnTrait, Condition, EntityTrait, QueryFilter, Set};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, Condition, EntityTrait, QueryFilter, Set, TransactionTrait,
+};
 use uuid::Uuid;
 
-use crate::entities::{prelude::*, users};
+use crate::entities::{prelude::*, user_settings, users};
 use crate::services::jwt::create_token;
 use crate::state::SharedState;
 
@@ -18,13 +20,18 @@ pub async fn register(
 ) -> Result<Json<AuthResponse>, (StatusCode, String)> {
     let db = state.db.clone();
 
+    let txn = db
+        .begin()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
     let existing_user = Users::find()
         .filter(
             Condition::any()
                 .add(users::Column::Email.eq(payload.email.clone()))
                 .add(users::Column::Username.eq(payload.username.clone())),
         )
-        .one(&db)
+        .one(&txn)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -59,8 +66,32 @@ pub async fn register(
         avatar_url: Set(None),
     };
 
-    Users::insert(new_user)
-        .exec(&db)
+    let default_settings = user_settings::ActiveModel {
+        user_id: Set(new_user_id.clone()),
+        locale: Set("en-US".to_string()),
+        developer_mode: Set(false),
+        notifications_active: Set(true),
+        theme_dark_mode: Set("system".to_string()),
+        theme_color: Set("default".to_string()),
+        theme_rounding: Set("0.5rem".to_string()),
+        theme_spacing: Set("default".to_string()),
+    };
+
+    new_user.insert(&txn).await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to create user: {}", e),
+        )
+    })?;
+
+    default_settings.insert(&txn).await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to create settings: {}", e),
+        )
+    })?;
+
+    txn.commit()
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 

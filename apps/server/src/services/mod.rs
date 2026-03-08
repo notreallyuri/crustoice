@@ -6,3 +6,5 @@ pub mod jwt;
 pub mod presence;
 pub mod r2;
 pub mod user_service;
+pub mod verify_password;
+

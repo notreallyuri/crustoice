@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs};
 
 use tauri::State;
 
-use crate::{client_state::ClientState, API_URL};
+use crate::{client_state::ClientState, structures::error::AppError, API_URL};
 
 #[tauri::command]
 pub async fn get_upload_url(
@@ -10,10 +10,10 @@ pub async fn get_upload_url(
     resource: String,
     id: String,
     extension: String,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     let token = {
         let store = state.store.lock().await;
-        store.jwt_token.clone().ok_or("No token")?
+        store.jwt_token.clone().ok_or(AppError::NoSession)?
     };
 
     let mut params = HashMap::new();
@@ -21,8 +21,8 @@ pub async fn get_upload_url(
     params.insert("id", id);
     params.insert("ext", extension);
 
-    let client = reqwest::Client::new();
-    let res = client
+    let res = state
+        .http
         .get(format!("{}/upload/url", API_URL))
         .query(&params)
         .header("Authorization", format!("Bearer {}", token))
@@ -31,10 +31,12 @@ pub async fn get_upload_url(
         .map_err(|e| e.to_string())?;
 
     if !res.status().is_success() {
-        return Err(format!("Server error: {}", res.status()));
+        return Err(AppError::from_res(res, "Get Upload Url").await);
     }
 
-    res.json::<String>().await.map_err(|e| e.to_string())
+    res.json::<String>()
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))
 }
 
 #[tauri::command]
@@ -43,10 +45,10 @@ pub async fn confirm_upload(
     resource: String,
     id: String,
     extension: String,
-) -> Result<(), String> {
+) -> Result<(), AppError> {
     let token = {
         let store = state.store.lock().await;
-        store.jwt_token.clone().ok_or("No token")?
+        store.jwt_token.clone().ok_or(AppError::NoSession)?
     };
 
     let mut params = HashMap::new();
@@ -54,8 +56,8 @@ pub async fn confirm_upload(
     params.insert("id", id);
     params.insert("ext", extension);
 
-    let client = reqwest::Client::new();
-    let res = client
+    let res = state
+        .http
         .post(format!("{}/upload/confirm", API_URL))
         .query(&params)
         .header("Authorization", format!("Bearer {}", token))
@@ -64,7 +66,7 @@ pub async fn confirm_upload(
         .map_err(|e| e.to_string())?;
 
     if !res.status().is_success() {
-        return Err(format!("Confirmation failed: {}", res.status()));
+        return Err(AppError::from_res(res, "Confirm Upload").await);
     }
 
     Ok(())
@@ -76,13 +78,10 @@ pub async fn upload_internal(
     id: &str,
     extension: &str,
     file_path: &str,
-) -> Result<(), String> {
+) -> Result<(), AppError> {
     let token = {
         let store = state.store.lock().await;
-        store
-            .jwt_token
-            .clone()
-            .ok_or("No token available for upload")?
+        store.jwt_token.clone().ok_or(AppError::NoSession)?
     };
 
     let mut params = HashMap::new();
@@ -90,8 +89,8 @@ pub async fn upload_internal(
     params.insert("id", id);
     params.insert("ext", extension);
 
-    let client = reqwest::Client::new();
-    let url_res = client
+    let url_res = state
+        .http
         .get(format!("{}/upload/url", API_URL))
         .query(&params)
         .header("Authorization", format!("Bearer {}", token))
@@ -100,7 +99,7 @@ pub async fn upload_internal(
         .map_err(|e| format!("Failed to get upload URL: {}", e))?;
 
     if !url_res.status().is_success() {
-        return Err(format!("Server refused upload URL: {}", url_res.status()));
+        return Err(AppError::from_res(url_res, "INTERNAL R2 URL").await);
     }
 
     let presigned_url = url_res.json::<String>().await.map_err(|e| e.to_string())?;
@@ -115,7 +114,8 @@ pub async fn upload_internal(
         _ => "image/jpeg",
     };
 
-    let put_res = client
+    let put_res = state
+        .http
         .put(presigned_url)
         .body(file_bytes)
         .header("Content-Type", mime_type)
@@ -124,10 +124,11 @@ pub async fn upload_internal(
         .map_err(|e| format!("Failed to upload to R2: {}", e))?;
 
     if !put_res.status().is_success() {
-        return Err(format!("R2 upload failed: {}", put_res.status()));
+        return Err(AppError::from_res(put_res, "INTERNAL R2 PUT").await);
     }
 
-    let confirm_res = client
+    let confirm_res = state
+        .http
         .post(format!("{}/upload/confirm", API_URL))
         .query(&params)
         .header("Authorization", format!("Bearer {}", token))
@@ -136,10 +137,7 @@ pub async fn upload_internal(
         .map_err(|e| format!("Failed to confirm upload: {}", e))?;
 
     if !confirm_res.status().is_success() {
-        return Err(format!(
-            "Database confirmation failed: {}",
-            confirm_res.status()
-        ));
+        return Err(AppError::from_res(confirm_res, "INTERNAL R2 CONFIRM").await);
     }
 
     Ok(())

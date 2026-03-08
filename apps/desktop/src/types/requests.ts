@@ -21,3 +21,24 @@ export type CreateChannelPayload = {
 export type CreateGuilldPayload = {
   name: string;
 };
+
+export type UpdateProfilePayload = {
+  display_name?: string;
+  bio?: string;
+  avatar_url?: string;
+};
+
+export type UpdateUsernamePayload = {
+  password: string;
+  username: string;
+};
+
+export type UpdateEmailPayload = {
+  password: string;
+  email: string;
+};
+
+export type UpdatePasswordPayload = {
+  password: string;
+  new_password: string;
+};

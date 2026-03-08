@@ -1,13 +1,14 @@
 import { StateCreator } from "zustand";
 import { AppStore, AuthRepository } from "../types";
 import { invoke } from "@tauri-apps/api/core";
+import { toast } from "sonner";
 
 export const createAuthService: StateCreator<
   AppStore,
   [],
   [],
   AuthRepository
-> = (_, get) => ({
+> = (set, get) => ({
   async initSession() {
     try {
       if (get().currentUser) return;
@@ -33,42 +34,36 @@ export const createAuthService: StateCreator<
     await get().getGuilds();
   },
 
-  async register(payload, avatarPath) {
+  async register(payload, avatarPath, crop) {
     await invoke<string>("register", {
       payload,
-      avatarPath
+      avatarPath,
+      crop
     });
 
     await get().getMe();
   },
 
-  async updateAvatar(file) {
+  async logout() {
     try {
-      const extension = file.name.split(".").pop()?.toLowerCase();
+      await invoke("logout");
 
-      if (!extension) throw new Error("Invalid file name");
-
-      const uploadUrl = await invoke<string>("get_avatar_upload_url", {
-        extension
+      set({
+        currentUser: null,
+        guilds: [],
+        messages: {},
+        userCache: {},
+        activeChannelId: null,
+        activeGuildId: null
       });
-
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type
-        }
-      });
-
-      if (!uploadRes.ok) throw new Error("R2 Upload failed");
-
-      await invoke("confirm_avatar_upload", { extension });
-
-      await get().getMe();
-      console.log("Avatar updated successfully!");
     } catch (e) {
-      console.error("Avatar update failed:", e);
-      throw e;
+      toast.error("Logout failed. Please try again.");
+      set({
+        currentUser: undefined,
+        activeGuildId: null,
+        activeChannelId: null,
+        guilds: []
+      });
     }
   }
 });

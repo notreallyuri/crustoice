@@ -17,6 +17,12 @@ import "./globals.css";
 const router = createRouter({ routeTree });
 const currentWindow = getCurrentWindow();
 
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
 function App() {
   if (currentWindow.label === "splashscreen") return <SplashScreen />;
 

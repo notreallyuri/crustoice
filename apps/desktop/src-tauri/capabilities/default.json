@@ -5,13 +5,21 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "opener:default",
-    "dialog:default",
-    "store:default",
+
+    "core:image:allow-from-path",
     "core:path:default",
+
+    "opener:default",
+
+    "dialog:default",
+
+    "store:default",
+
     "fs:default",
     "fs:allow-read-file",
-    "core:image:allow-from-path",
+    "fs:allow-write-file",
+    "fs:allow-temp-write",
+    "fs:allow-temp-read",
     {
       "identifier": "fs:scope",
       "allow": [{ "path": "**/*" }]

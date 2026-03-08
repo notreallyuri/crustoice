@@ -8,83 +8,83 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as GRouteImport } from './routes/g'
-import { Route as GAtmeRouteImport } from './routes/g/@me'
-import { Route as AuthRegisterRouteImport } from './routes/auth/register'
-import { Route as AuthLoginRouteImport } from './routes/auth/login'
-import { Route as GGuildIdChanneldRouteImport } from './routes/g/$guildId.$channeld'
+import { Route as rootRouteImport } from "./routes/__root"
+import { Route as GRouteImport } from "./routes/g"
+import { Route as GAtmeRouteImport } from "./routes/g/@me"
+import { Route as AuthRegisterRouteImport } from "./routes/auth/register"
+import { Route as AuthLoginRouteImport } from "./routes/auth/login"
+import { Route as GGuildIdChannelIdRouteImport } from "./routes/g/$guildId.$channelId"
 
 const GRoute = GRouteImport.update({
-  id: '/g',
-  path: '/g',
+  id: "/g",
+  path: "/g",
   getParentRoute: () => rootRouteImport,
 } as any)
 const GAtmeRoute = GAtmeRouteImport.update({
-  id: '/@me',
-  path: '/@me',
+  id: "/@me",
+  path: "/@me",
   getParentRoute: () => GRoute,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
-  id: '/auth/register',
-  path: '/auth/register',
+  id: "/auth/register",
+  path: "/auth/register",
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
+  id: "/auth/login",
+  path: "/auth/login",
   getParentRoute: () => rootRouteImport,
 } as any)
-const GGuildIdChanneldRoute = GGuildIdChanneldRouteImport.update({
-  id: '/$guildId/$channeld',
-  path: '/$guildId/$channeld',
+const GGuildIdChannelIdRoute = GGuildIdChannelIdRouteImport.update({
+  id: "/$guildId/$channelId",
+  path: "/$guildId/$channelId",
   getParentRoute: () => GRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/g': typeof GRouteWithChildren
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/register': typeof AuthRegisterRoute
-  '/g/@me': typeof GAtmeRoute
-  '/g/$guildId/$channeld': typeof GGuildIdChanneldRoute
+  "/g": typeof GRouteWithChildren
+  "/auth/login": typeof AuthLoginRoute
+  "/auth/register": typeof AuthRegisterRoute
+  "/g/@me": typeof GAtmeRoute
+  "/g/$guildId/$channelId": typeof GGuildIdChannelIdRoute
 }
 export interface FileRoutesByTo {
-  '/g': typeof GRouteWithChildren
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/register': typeof AuthRegisterRoute
-  '/g/@me': typeof GAtmeRoute
-  '/g/$guildId/$channeld': typeof GGuildIdChanneldRoute
+  "/g": typeof GRouteWithChildren
+  "/auth/login": typeof AuthLoginRoute
+  "/auth/register": typeof AuthRegisterRoute
+  "/g/@me": typeof GAtmeRoute
+  "/g/$guildId/$channelId": typeof GGuildIdChannelIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/g': typeof GRouteWithChildren
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/register': typeof AuthRegisterRoute
-  '/g/@me': typeof GAtmeRoute
-  '/g/$guildId/$channeld': typeof GGuildIdChanneldRoute
+  "/g": typeof GRouteWithChildren
+  "/auth/login": typeof AuthLoginRoute
+  "/auth/register": typeof AuthRegisterRoute
+  "/g/@me": typeof GAtmeRoute
+  "/g/$guildId/$channelId": typeof GGuildIdChannelIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/g'
-    | '/auth/login'
-    | '/auth/register'
-    | '/g/@me'
-    | '/g/$guildId/$channeld'
+    | "/g"
+    | "/auth/login"
+    | "/auth/register"
+    | "/g/@me"
+    | "/g/$guildId/$channelId"
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/g'
-    | '/auth/login'
-    | '/auth/register'
-    | '/g/@me'
-    | '/g/$guildId/$channeld'
+    | "/g"
+    | "/auth/login"
+    | "/auth/register"
+    | "/g/@me"
+    | "/g/$guildId/$channelId"
   id:
-    | '__root__'
-    | '/g'
-    | '/auth/login'
-    | '/auth/register'
-    | '/g/@me'
-    | '/g/$guildId/$channeld'
+    | "__root__"
+    | "/g"
+    | "/auth/login"
+    | "/auth/register"
+    | "/g/@me"
+    | "/g/$guildId/$channelId"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,41 +93,41 @@ export interface RootRouteChildren {
   AuthRegisterRoute: typeof AuthRegisterRoute
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/g': {
-      id: '/g'
-      path: '/g'
-      fullPath: '/g'
+    "/g": {
+      id: "/g"
+      path: "/g"
+      fullPath: "/g"
       preLoaderRoute: typeof GRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/g/@me': {
-      id: '/g/@me'
-      path: '/@me'
-      fullPath: '/g/@me'
+    "/g/@me": {
+      id: "/g/@me"
+      path: "/@me"
+      fullPath: "/g/@me"
       preLoaderRoute: typeof GAtmeRouteImport
       parentRoute: typeof GRoute
     }
-    '/auth/register': {
-      id: '/auth/register'
-      path: '/auth/register'
-      fullPath: '/auth/register'
+    "/auth/register": {
+      id: "/auth/register"
+      path: "/auth/register"
+      fullPath: "/auth/register"
       preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/auth/login'
-      fullPath: '/auth/login'
+    "/auth/login": {
+      id: "/auth/login"
+      path: "/auth/login"
+      fullPath: "/auth/login"
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/g/$guildId/$channeld': {
-      id: '/g/$guildId/$channeld'
-      path: '/$guildId/$channeld'
-      fullPath: '/g/$guildId/$channeld'
-      preLoaderRoute: typeof GGuildIdChanneldRouteImport
+    "/g/$guildId/$channelId": {
+      id: "/g/$guildId/$channelId"
+      path: "/$guildId/$channelId"
+      fullPath: "/g/$guildId/$channelId"
+      preLoaderRoute: typeof GGuildIdChannelIdRouteImport
       parentRoute: typeof GRoute
     }
   }
@@ -135,12 +135,12 @@ declare module '@tanstack/react-router' {
 
 interface GRouteChildren {
   GAtmeRoute: typeof GAtmeRoute
-  GGuildIdChanneldRoute: typeof GGuildIdChanneldRoute
+  GGuildIdChannelIdRoute: typeof GGuildIdChannelIdRoute
 }
 
 const GRouteChildren: GRouteChildren = {
   GAtmeRoute: GAtmeRoute,
-  GGuildIdChanneldRoute: GGuildIdChanneldRoute,
+  GGuildIdChannelIdRoute: GGuildIdChannelIdRoute,
 }
 
 const GRouteWithChildren = GRoute._addFileChildren(GRouteChildren)

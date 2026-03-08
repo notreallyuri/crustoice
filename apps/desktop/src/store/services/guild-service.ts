@@ -9,8 +9,8 @@ export const createGuildService: StateCreator<
   [],
   GuildRepository
 > = (set, get, _) => ({
-  createGuild: async (payload, iconPath) => {
-    await invoke<Guild>("create_guild", { payload, iconPath });
+  createGuild: async (payload, iconPath, crop) => {
+    await invoke<Guild>("create_guild", { payload, iconPath, crop });
 
     get().getGuilds();
   },

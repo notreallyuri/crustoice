@@ -1,4 +1,7 @@
-use crate::{client_state::ClientState, general::upload::upload_internal, API_URL};
+use crate::{
+    client_state::ClientState, general::upload::upload_internal, structures::error::AppError,
+    API_URL,
+};
 use serde_json::json;
 use shared::{
     http::{requests::RegisterRequest, responses::AuthResponse},
@@ -13,10 +16,9 @@ pub async fn register(
     state: State<'_, ClientState>,
     avatar_path: Option<String>,
     app_handle: AppHandle,
-) -> Result<UserId, String> {
-    let client = reqwest::Client::new();
-
-    let res = client
+) -> Result<UserId, AppError> {
+    let res = state
+        .http
         .post(format!("{}/auth/register", API_URL))
         .json(&payload)
         .send()
@@ -24,7 +26,7 @@ pub async fn register(
         .map_err(|e| e.to_string())?;
 
     if !res.status().is_success() {
-        return Err(format!("Registration failed with status: {}", res.status()));
+        return Err(AppError::from_res(res, "Registration").await);
     }
 
     let auth_data: AuthResponse = res

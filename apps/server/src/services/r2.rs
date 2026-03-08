@@ -11,7 +11,7 @@ use axum::{
 };
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, EntityTrait};
 use serde::Deserialize;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[derive(Deserialize)]
 pub struct UploadParams {
@@ -27,11 +27,16 @@ pub async fn confirm_upload(
 ) -> Result<StatusCode, (StatusCode, String)> {
     let public_base_url = std::env::var("R2_PUBLIC_URL").expect("R2_PUBLIC_URL must be set");
 
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_secs();
+
     match params.resource.as_str() {
         "avatar" => {
             let final_url = format!(
-                "{}/avatars/{}/pfp.{}",
-                public_base_url, params.id, params.ext
+                "{}/avatars/{}/pfp.{}?v={}",
+                public_base_url, params.id, params.ext, timestamp
             );
 
             if user_id != params.id {
@@ -53,8 +58,8 @@ pub async fn confirm_upload(
         }
         "guild" => {
             let final_url = format!(
-                "{}/guilds/{}/icon.{}",
-                public_base_url, params.id, params.ext
+                "{}/guilds/{}/icon.{}?v={}",
+                public_base_url, params.id, params.ext, timestamp
             );
 
             let guild_model = guilds::Entity::find_by_id(params.id.clone())

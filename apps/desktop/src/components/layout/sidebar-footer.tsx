@@ -10,80 +10,127 @@ import {
   Settings,
   User as UserIcon
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { UserProfileCard } from "./profile-card";
+import { AvatarGif } from "../avatar-gif";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
-export function SidebarFooter({ currentUser }: { currentUser: User }) {
+type Props = {
+  currentUser: User;
+  setSettingsDialogOpen: (open: boolean) => void;
+};
+
+export function SidebarFooter({ currentUser, setSettingsDialogOpen }: Props) {
   const [profileShow, setProfileShow] = useState(false);
   const [muted, setMuted] = useState(false);
   const [deafened, setDeafened] = useState(false);
 
   return (
-    <ShadSidebarFooter className="h-15 flex-row items-center justify-between p-2 shadow-md relative">
+    <ShadSidebarFooter className="h-14 flex-row items-center justify-between px-2 py-1.5 border-t border-border/50 bg-background/80 backdrop-blur-sm relative">
       {profileShow && (
         <UserProfileCard
           user={currentUser}
           onClose={() => setProfileShow(false)}
-          className="w-[calc(100%-16px)]"
+          className="mb-2"
         />
       )}
 
-      <div className="flex border w-full pr-1">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            setProfileShow(true);
-          }}
-          className="flex flex-1 cursor-pointer items-center gap-2 overflow-hidden rounded-md px-2 py-1 transition-colors hover:bg-white/10"
-        >
-          <Avatar className="rounded-none">
-            <AvatarImage
-              className="rounded-none"
-              src={currentUser?.profile.avatar_url ?? undefined}
-            />
-            <AvatarFallback className="rounded-none ">
-              <UserIcon size={24} />
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col truncate leading-tight">
-            <span className="truncate text-sm font-semibold text-white">
-              {currentUser?.profile.display_name}
-            </span>
-            <span className="truncate text-xs text-muted-foreground">
-              {currentUser?.profile.username}
-            </span>
-          </div>
-        </button>
-
-        <div className="flex shrink-0 items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer"
-            onClick={() => setMuted((m) => !m)}
-          >
-            {muted ? <MicOff className="text-destructive" /> : <Mic />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer"
-            onClick={() => setDeafened((d) => !d)}
-          >
-            {deafened ? (
-              <HeadphoneOff className="text-destructive" />
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          setProfileShow(true);
+        }}
+        className="flex flex-1 min-w-0 cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-white/8 group"
+      >
+        <div className="relative shrink-0">
+          <Avatar className="size-8">
+            {currentUser.profile.avatar_url ? (
+              <AvatarGif src={currentUser.profile.avatar_url} alt="" />
             ) : (
-              <Headphones />
+              <AvatarFallback className="bg-primary/20">
+                <UserIcon size={16} />
+              </AvatarFallback>
             )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer"
-          >
-            <Settings className="size-4" />
-          </Button>
+          </Avatar>
+          {/* Online indicator */}
+          <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 border-2 border-background" />
         </div>
+
+        <div className="flex flex-col truncate leading-tight text-left">
+          <span className="truncate text-sm font-semibold text-foreground group-hover:text-white transition-colors">
+            {currentUser.profile.display_name}
+          </span>
+          <span className="truncate text-xs text-muted-foreground">
+            @{currentUser.profile.username}
+          </span>
+        </div>
+      </button>
+
+      <div className="flex shrink-0 items-center gap-0.5 ml-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer transition-colors",
+                muted && "text-destructive hover:text-destructive"
+              )}
+              onClick={() => setMuted((m) => !m)}
+            >
+              {muted ? (
+                <MicOff className="size-4" />
+              ) : (
+                <Mic className="size-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {muted ? "Unmute" : "Mute"}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer transition-colors",
+                deafened && "text-destructive hover:text-destructive"
+              )}
+              onClick={() => setDeafened((d) => !d)}
+            >
+              {deafened ? (
+                <HeadphoneOff className="size-4" />
+              ) : (
+                <Headphones className="size-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {deafened ? "Undeafen" : "Deafen"}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer"
+              onClick={() => setSettingsDialogOpen(true)}
+            >
+              <Settings className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">Settings</TooltipContent>
+        </Tooltip>
       </div>
     </ShadSidebarFooter>
   );

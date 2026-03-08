@@ -58,7 +58,7 @@ pub async fn get_guilds(
             owner_id: UserId(g.owner_id),
             icon_url: g.icon_url,
             banner_url: g.banner_url,
-            default_channel_id: g.default_channel_id.map(ChannelId), // <--- THE FIX
+            default_channel_id: g.default_channel_id.map(ChannelId),
             name: g.name,
 
             channels: channels_by_guild.remove(&g.id).unwrap_or_default(),

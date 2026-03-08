@@ -1,26 +1,28 @@
-use crate::{client_state::ClientState, API_URL};
+use crate::{client_state::ClientState, structures::error::AppError, API_URL};
 use shared::structures::Guild;
 use tauri::State;
 
 #[tauri::command]
-pub async fn get_guilds(state: State<'_, ClientState>) -> Result<Vec<Guild>, String> {
+pub async fn get_guilds(state: State<'_, ClientState>) -> Result<Vec<Guild>, AppError> {
     let token = {
         let store = state.store.lock().await;
 
-        store.jwt_token.clone().ok_or("No active session")?
+        store.jwt_token.clone().ok_or(AppError::NoSession)?
     };
 
-    let client = reqwest::Client::new();
-
-    let res = client
-        .get(format!("{}/user/@me/guilds", API_URL))
+    let res = state
+        .http
+        .get(format!("{}/users/@me/guilds", API_URL))
         .header("Authorization", format!("Bearer {}", token))
         .send()
         .await
         .map_err(|e| format!("Network error: {}", e))?;
 
     if !res.status().is_success() {
-        return Err(format!("Failed to fetch guilds. Status: {}", res.status()));
+        return Err(AppError::Internal(format!(
+            "Failed to fetch guilds. Status: {}",
+            res.status()
+        )));
     }
 
     let guilds: Vec<Guild> = res

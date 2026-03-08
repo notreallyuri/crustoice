@@ -1,4 +1,4 @@
-use crate::API_URL;
+use crate::{structures::error::AppError, API_URL};
 use serde_json::json;
 use shared::{
     http::{requests::LoginRequest, responses::AuthResponse},
@@ -14,12 +14,11 @@ pub async fn login(
     payload: LoginRequest,
     state: State<'_, ClientState>,
     app_handle: AppHandle,
-) -> Result<UserId, String> {
-    let client = reqwest::Client::new();
-
+) -> Result<UserId, AppError> {
     print!("Attempting to log in with email: {}", payload.email);
 
-    let res = client
+    let res = state
+        .http
         .post(format!("{}/auth/login", API_URL))
         .json(&payload)
         .send()
@@ -27,7 +26,7 @@ pub async fn login(
         .map_err(|e| e.to_string())?;
 
     if !res.status().is_success() {
-        return Err(format!("Login failed with status: {}", res.status()));
+        return Err(AppError::from_res(res, "Credentials").await);
     }
 
     let auth_data: AuthResponse = res
@@ -45,6 +44,7 @@ pub async fn login(
     {
         let mut store_guard = state.store.lock().await;
         store_guard.jwt_token = Some(auth_data.token);
+        store_guard.user_id = Some(auth_data.user_id.0.to_string());
     }
 
     Ok(auth_data.user_id)

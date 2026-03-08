@@ -1,3 +1,4 @@
+import { CropResult } from "@/components/kibo-ui/image-crop";
 import {
   ChannelId,
   ChatMessage,
@@ -11,13 +12,18 @@ import {
   CreateChannelPayload,
   CreateGuilldPayload,
   LoginPayload,
-  RegisterPayload
+  RegisterPayload,
+  UpdateEmailPayload,
+  UpdatePasswordPayload,
+  UpdateProfilePayload,
+  UpdateUsernamePayload
 } from "@/types/requests";
 
 export interface GuildRepository {
   createGuild: (
     data: CreateGuilldPayload,
-    icon_path: string | null
+    icon_path: string | null,
+    crop?: CropResult
   ) => Promise<void>;
   deleteGuild: (guildId: GuildId) => Promise<void>;
   selectGuild: (guildId: GuildId) => void;
@@ -25,11 +31,12 @@ export interface GuildRepository {
 
 export interface AuthRepository {
   initSession: () => Promise<void>;
-  updateAvatar: (file: File) => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
+  logout: () => Promise<void>;
   register: (
     payload: RegisterPayload,
-    avatar_path: string | null
+    avatar_path: string | null,
+    crop?: CropResult
   ) => Promise<void>;
 }
 
@@ -38,6 +45,16 @@ export interface UserRepository {
   fetchUser: (userId: UserId) => Promise<void>;
   getMe: () => Promise<void>;
   getGuilds: () => Promise<void>;
+  leaveGuild: (guildId: GuildId) => Promise<void>;
+
+  // Update Methods
+  updateProfile: (
+    payload: UpdateProfilePayload,
+    crop?: CropResult
+  ) => Promise<void>;
+  updateUsername: (payload: UpdateUsernamePayload) => Promise<void>;
+  updateEmail: (payload: UpdateEmailPayload) => Promise<void>;
+  updatePassword: (payload: UpdatePasswordPayload) => Promise<void>;
 }
 
 export interface ChannelRepository {
