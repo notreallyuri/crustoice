@@ -96,7 +96,7 @@ impl AppState {
     }
 
     pub fn send_to_user(&self, user_id: &UserId, message: &ServerMessage) {
-        let sessions = self.sessions.read().unwrap();
+        let sessions = self.sessions.read().unwrap_or_else(|e| e.into_inner());
 
         if let Some(session) = sessions.get(user_id)
             && let Ok(json) = serde_json::to_string(message)

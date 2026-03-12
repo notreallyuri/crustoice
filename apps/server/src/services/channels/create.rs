@@ -22,10 +22,8 @@ pub async fn create_channel(
     Path(guild_id): Path<GuildId>,
     Json(payload): Json<CreateChannelRequest>,
 ) -> impl IntoResponse {
-    let db = state.db.clone();
-
     let guild_exists = Guilds::find_by_id(guild_id.0.clone())
-        .one(&db)
+        .one(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -35,7 +33,7 @@ pub async fn create_channel(
 
     let channel_count = Channels::find()
         .filter(channels::Column::GuildId.eq(guild_id.0.clone()))
-        .count(&db)
+        .count(&state.db)
         .await
         .unwrap_or(0);
 
@@ -51,7 +49,7 @@ pub async fn create_channel(
     };
 
     let inserted_channel = new_channel
-        .insert(&db)
+        .insert(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 

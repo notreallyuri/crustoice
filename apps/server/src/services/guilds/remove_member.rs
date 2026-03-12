@@ -21,10 +21,8 @@ pub async fn remove_member_from_guild(
     Path(guild_id): Path<GuildId>,
     Json(payload): Json<RemoveGuildMemberRequest>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let db = state.db.clone();
-
     let guild = Guilds::find_by_id(guild_id.0.clone())
-        .one(&db)
+        .one(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or((StatusCode::NOT_FOUND, "Guild not found".to_string()))?;
@@ -42,7 +40,7 @@ pub async fn remove_member_from_guild(
                 .eq(guild_id.0.clone())
                 .and(guild_members::Column::UserId.eq(payload.user_id.0.clone())),
         )
-        .exec(&db)
+        .exec(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 

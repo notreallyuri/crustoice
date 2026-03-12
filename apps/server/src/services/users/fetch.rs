@@ -52,7 +52,7 @@ pub async fn get_user_profile(
     db: &DatabaseConnection,
     user_id: &UserId,
 ) -> Result<Option<UserProfile>, DbErr> {
-    let user = Users::find_by_id(user_id.0.clone()).one(db).await?;
+    let user = Users::find_by_id(&user_id.0).one(db).await?;
 
     Ok(user.map(|u| UserProfile {
         username: u.username.clone(),
@@ -69,8 +69,8 @@ pub async fn get_user_relationships(
     let rows = Relationships::find()
         .filter(
             Condition::any()
-                .add(relationships::Column::UserId.eq(user_id.0.clone()))
-                .add(relationships::Column::TargetId.eq(user_id.0.clone())),
+                .add(relationships::Column::UserId.eq(&user_id.0))
+                .add(relationships::Column::TargetId.eq(&user_id.0)),
         )
         .find_also_related(Users)
         .all(db)
@@ -79,14 +79,15 @@ pub async fn get_user_relationships(
     let mut result = vec![];
 
     for (rel, user_opt) in rows {
-        let Some(other_user) = user_opt else { continue };
+        let is_initiator = rel.user_id == user_id.0;
 
-        // The "other" user is the one that isn't us
-        let other_id = if rel.user_id == user_id.0 {
-            rel.target_id.clone()
+        let other_id = if is_initiator {
+            rel.target_id
         } else {
-            rel.user_id.clone()
+            rel.user_id
         };
+
+        let Some(other_user) = user_opt else { continue };
 
         if other_user.id != other_id {
             continue;
@@ -96,7 +97,7 @@ pub async fn get_user_relationships(
             1 => RelationshipStatus::Friend,
             2 => RelationshipStatus::Blocked,
             3 => {
-                if rel.user_id == user_id.0 {
+                if is_initiator {
                     RelationshipStatus::PendingOutcoming
                 } else {
                     RelationshipStatus::PendingIncoming
@@ -132,13 +133,16 @@ pub async fn get_me(
     State(state): State<SharedState>,
     AuthedUser(user_id): AuthedUser,
 ) -> Result<Json<User>, (StatusCode, String)> {
-    let db = state.db.clone();
-
-    let user = Users::find_by_id(user_id.clone())
-        .one(&db)
+    let user = Users::find_by_id(&user_id)
+        .one(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
+
+    let display_name = match user.display_name {
+        Some(name) if !name.trim().is_empty() => name,
+        _ => user.username.clone(),
+    };
 
     let user = User {
         id: UserId(user_id.clone()),
@@ -147,11 +151,8 @@ pub async fn get_me(
             verified: true,
         },
         profile: UserProfile {
-            username: user.username.clone(),
-            display_name: match user.display_name {
-                Some(name) if !name.trim().is_empty() => name,
-                _ => user.username.clone(),
-            },
+            username: user.username,
+            display_name,
             avatar_url: user.avatar_url,
             bio: user.bio,
         },

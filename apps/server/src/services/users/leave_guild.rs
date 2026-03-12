@@ -17,9 +17,8 @@ pub async fn leave_guild(
     AuthedUser(user_id): AuthedUser,
     Path(guild_id): Path<String>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let db = state.db.clone();
-
-    let txn = db
+    let txn = state
+        .db
         .begin()
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;

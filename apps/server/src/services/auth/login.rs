@@ -13,11 +13,9 @@ pub async fn login(
     State(state): State<SharedState>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<Json<AuthResponse>, (StatusCode, String)> {
-    let db = state.db.clone();
-
     let user = Users::find()
         .filter(users::Column::Email.eq(payload.email))
-        .one(&db)
+        .one(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or((

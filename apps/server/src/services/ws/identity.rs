@@ -14,20 +14,24 @@ use super::presence;
 
 pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Result<(), String> {
     let user_data = {
-        Users::find_by_id(user_id.0.clone())
+        Users::find_by_id(&user_id.0)
             .one(&state.db)
             .await
             .map_err(|e| e.to_string())?
             .ok_or("User not found".to_string())?
     };
 
-    state.sessions.write().unwrap().insert(
-        user_id.clone(),
-        ActiveSession {
-            tx: tx.clone(),
-            user_id: user_id.clone(),
-        },
-    );
+    state
+        .sessions
+        .write()
+        .unwrap_or_else(|e| e.into_inner())
+        .insert(
+            user_id.clone(),
+            ActiveSession {
+                tx,
+                user_id: user_id.clone(),
+            },
+        );
 
     let initial_presence = UserPresence {
         status: Status::Online,
@@ -37,11 +41,10 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
 
     let display_name = user_data
         .display_name
-        .clone()
-        .unwrap_or(user_data.username.clone());
+        .unwrap_or_else(|| user_data.username.clone());
 
     let guild_memberships = GuildMembers::find()
-        .filter(guild_members::Column::UserId.eq(user_id.0.clone()))
+        .filter(guild_members::Column::UserId.eq(&user_id.0))
         .all(&state.db)
         .await
         .map_err(|e| e.to_string())?;
@@ -59,7 +62,7 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
     let user = User {
         id: user_id.clone(),
         account: UserAccount {
-            email: user_data.email.clone(),
+            email: user_data.email,
             verified: true,
         },
         profile: UserProfile {
@@ -126,7 +129,7 @@ pub async fn handle_disconnect(state: &SharedState, user_id: UserId) {
     let _ = presence::set_presence(state, &user_id, &offline_presence).await;
 
     let guild_memberships = GuildMembers::find()
-        .filter(guild_members::Column::UserId.eq(user_id.0.clone()))
+        .filter(guild_members::Column::UserId.eq(&user_id.0))
         .all(&state.db)
         .await
         .unwrap_or_default();

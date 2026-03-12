@@ -15,10 +15,8 @@ pub async fn update_profile(
     AuthedUser(user_id): AuthedUser,
     Json(payload): Json<UpdateProfileRequest>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let db = state.db.clone();
-
     let user = Users::find_by_id(user_id)
-        .one(&db)
+        .one(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
@@ -38,7 +36,7 @@ pub async fn update_profile(
     }
 
     user_am
-        .update(&db)
+        .update(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -50,14 +48,12 @@ pub async fn update_username(
     AuthedUser(user_id): AuthedUser,
     Json(payload): Json<UpdateUsernameRequest>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let db = state.db.clone();
-
-    let user = verify_password(&db, &user_id, &payload.current_password).await?;
+    let user = verify_password(&state.db, &user_id, &payload.current_password).await?;
 
     let mut user_am: users::ActiveModel = user.into();
     user_am.username = Set(payload.new_username);
 
-    user_am.update(&db).await.map_err(|_| {
+    user_am.update(&state.db).await.map_err(|_| {
         (
             StatusCode::CONFLICT,
             "Username is already taken or invalid".to_string(),
@@ -72,15 +68,13 @@ pub async fn update_email(
     AuthedUser(user_id): AuthedUser,
     Json(payload): Json<UpdateEmailRequest>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let db = state.db.clone();
-
-    let user = verify_password(&db, &user_id, &payload.current_password).await?;
+    let user = verify_password(&state.db, &user_id, &payload.current_password).await?;
 
     let mut user_am: users::ActiveModel = user.into();
     user_am.email = Set(payload.new_email);
 
     user_am
-        .update(&db)
+        .update(&state.db)
         .await
         .map_err(|_| (StatusCode::CONFLICT, "Email is already in use".to_string()))?;
 
@@ -92,9 +86,7 @@ pub async fn change_password(
     AuthedUser(user_id): AuthedUser,
     Json(payload): Json<ChangePasswordRequest>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let db = state.db.clone();
-
-    let user = verify_password(&db, &user_id, &payload.current_password).await?;
+    let user = verify_password(&state.db, &user_id, &payload.current_password).await?;
 
     let new_hash = bcrypt::hash(&payload.new_password, bcrypt::DEFAULT_COST).map_err(|_| {
         (
@@ -106,7 +98,7 @@ pub async fn change_password(
     let mut user_am: users::ActiveModel = user.into();
     user_am.password_hash = Set(new_hash);
 
-    user_am.update(&db).await.map_err(|_| {
+    user_am.update(&state.db).await.map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Failed to update password".to_string(),

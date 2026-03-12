@@ -14,8 +14,6 @@ pub async fn create_guild(
     AuthedUser(user_id): AuthedUser,
     Json(payload): Json<CreateGuildRequest>,
 ) -> Result<(StatusCode, Json<Guild>), (StatusCode, String)> {
-    let db = state.db.clone();
-
     let guild_id = Uuid::new_v4().to_string();
     let channel_id = Uuid::new_v4().to_string();
     let now = chrono::Utc::now().naive_utc();
@@ -50,7 +48,8 @@ pub async fn create_guild(
         category_id: Set(None),
     };
 
-    let txn = db
+    let txn = state
+        .db
         .begin()
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;

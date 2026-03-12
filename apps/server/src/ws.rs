@@ -110,7 +110,11 @@ async fn handle_socket(socket: WebSocket, state: SharedState) {
     println!("User {} disconnected.", current_user_id.0);
     heartbeat.abort();
     send_task.abort();
-    state.sessions.write().unwrap().remove(&current_user_id);
+    state
+        .sessions
+        .write()
+        .unwrap_or_else(|e| e.into_inner())
+        .remove(&current_user_id);
     let _ = handle_disconnect(&state, current_user_id).await;
 }
 

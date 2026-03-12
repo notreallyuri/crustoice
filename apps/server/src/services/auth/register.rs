@@ -16,9 +16,8 @@ pub async fn register(
     State(state): State<SharedState>,
     Json(payload): Json<RegisterRequest>,
 ) -> Result<Json<AuthResponse>, (StatusCode, String)> {
-    let db = state.db.clone();
-
-    let txn = db
+    let txn = state
+        .db
         .begin()
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -26,8 +25,8 @@ pub async fn register(
     let existing_user = Users::find()
         .filter(
             Condition::any()
-                .add(users::Column::Email.eq(payload.email.clone()))
-                .add(users::Column::Username.eq(payload.username.clone())),
+                .add(users::Column::Email.eq(&payload.email))
+                .add(users::Column::Username.eq(&payload.username)),
         )
         .one(&txn)
         .await

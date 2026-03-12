@@ -10,10 +10,8 @@ pub async fn delete_channel(
     State(state): State<SharedState>,
     Path(channel_id): Path<ChannelId>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    let db = state.db.clone();
-
     let delete_res = Channels::delete_by_id(channel_id.0)
-        .exec(&db)
+        .exec(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 

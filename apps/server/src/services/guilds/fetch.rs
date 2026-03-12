@@ -7,7 +7,7 @@ pub async fn get_user_guilds(
     user_id: &UserId,
 ) -> Result<Vec<Guild>, DbErr> {
     let memberships = GuildMembers::find()
-        .filter(guild_members::Column::UserId.eq(user_id.0.clone()))
+        .filter(guild_members::Column::UserId.eq(&user_id.0))
         .find_also_related(Guilds)
         .all(db)
         .await?;
@@ -18,7 +18,7 @@ pub async fn get_user_guilds(
         let Some(g) = guild_opt else { continue };
 
         let member_models = GuildMembers::find()
-            .filter(guild_members::Column::GuildId.eq(g.id.clone()))
+            .filter(guild_members::Column::GuildId.eq(&g.id))
             .find_also_related(Users)
             .all(db)
             .await?;
@@ -37,8 +37,8 @@ pub async fn get_user_guilds(
                     data: UserPublic {
                         id: UserId(u.id),
                         profile: UserProfile {
-                            username: u.username.clone(),
-                            display_name: u.display_name.unwrap_or(u.username),
+                            display_name: u.display_name.unwrap_or_else(|| u.username.clone()),
+                            username: u.username,
                             avatar_url: u.avatar_url,
                             bio: u.bio,
                         },
@@ -53,7 +53,7 @@ pub async fn get_user_guilds(
             .collect();
 
         let category_models = Categories::find()
-            .filter(categories::Column::GuildId.eq(g.id.clone()))
+            .filter(categories::Column::GuildId.eq(&g.id))
             .all(db)
             .await?;
 
@@ -68,7 +68,7 @@ pub async fn get_user_guilds(
             .collect();
 
         let channel_models = Channels::find()
-            .filter(channels::Column::GuildId.eq(g.id.clone()))
+            .filter(channels::Column::GuildId.eq(&g.id))
             .all(db)
             .await?;
 

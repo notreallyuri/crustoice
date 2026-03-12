@@ -21,10 +21,8 @@ pub async fn create_invite(
     Path(guild_id): Path<GuildId>,
     Json(payload): Json<CreateInviteRequest>,
 ) -> Result<(StatusCode, Json<InviteResponse>), (StatusCode, String)> {
-    let db = state.db.clone();
-
     let guild = Guilds::find_by_id(guild_id.0.clone())
-        .one(&db)
+        .one(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or((StatusCode::NOT_FOUND, "Guild not found".to_string()))?;
@@ -55,7 +53,7 @@ pub async fn create_invite(
     };
 
     new_invite
-        .insert(&db)
+        .insert(&state.db)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
