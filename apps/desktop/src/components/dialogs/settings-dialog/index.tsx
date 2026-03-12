@@ -22,7 +22,7 @@ export function SettingsDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="w-[calc(100vw-5rem)] h-[calc(100vh-5rem)] max-w-none! p-0 rounded-none border-0 overflow-hidden flex">
+      <DialogContent className="w-[calc(100vw-16rem)] h-[calc(100vh-10rem)] max-w-none! p-0 rounded-none border-0 overflow-hidden flex">
         <DialogTitle className="sr-only">Settings</DialogTitle>
         <DialogDescription className="sr-only">
           Configure your preferences and settings for the application

@@ -1,4 +1,4 @@
-use crate::{services::r2, state::SharedState};
+use crate::{services::storage::r2, state::SharedState};
 use axum::{
     Router,
     routing::{get, post},

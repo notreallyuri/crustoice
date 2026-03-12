@@ -32,8 +32,6 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     Guilds,
-    #[sea_orm(has_many = "super::messages::Entity")]
-    Messages,
 }
 
 impl Related<super::categories::Entity> for Entity {
@@ -45,12 +43,6 @@ impl Related<super::categories::Entity> for Entity {
 impl Related<super::guilds::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Guilds.def()
-    }
-}
-
-impl Related<super::messages::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Messages.def()
     }
 }
 

@@ -1,4 +1,4 @@
-use shared::structures::User;
+use shared::structures::user::User;
 use tauri::State;
 
 use crate::{client_state::ClientState, structures::error::AppError, API_URL};

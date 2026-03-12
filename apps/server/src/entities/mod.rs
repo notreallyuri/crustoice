@@ -7,7 +7,7 @@ pub mod channels;
 pub mod guild_members;
 pub mod guilds;
 pub mod invites;
-pub mod messages;
+pub mod presence_presets;
 pub mod relationships;
 pub mod user_settings;
 pub mod users;

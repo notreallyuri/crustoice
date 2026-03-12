@@ -5,7 +5,6 @@ pub use super::channels::Entity as Channels;
 pub use super::guild_members::Entity as GuildMembers;
 pub use super::guilds::Entity as Guilds;
 pub use super::invites::Entity as Invites;
-pub use super::messages::Entity as Messages;
 pub use super::relationships::Entity as Relationships;
 pub use super::user_settings::Entity as UserSettings;
 pub use super::users::Entity as Users;

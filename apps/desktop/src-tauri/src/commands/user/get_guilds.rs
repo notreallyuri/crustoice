@@ -1,5 +1,5 @@
 use crate::{client_state::ClientState, structures::error::AppError, API_URL};
-use shared::structures::Guild;
+use shared::structures::guild::Guild;
 use tauri::State;
 
 #[tauri::command]

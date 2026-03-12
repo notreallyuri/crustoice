@@ -28,8 +28,6 @@ pub enum Relation {
     Guilds,
     #[sea_orm(has_many = "super::invites::Entity")]
     Invites,
-    #[sea_orm(has_many = "super::messages::Entity")]
-    Messages,
 }
 
 impl Related<super::user_settings::Entity> for Entity {
@@ -47,12 +45,6 @@ impl Related<super::guild_members::Entity> for Entity {
 impl Related<super::invites::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Invites.def()
-    }
-}
-
-impl Related<super::messages::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Messages.def()
     }
 }
 

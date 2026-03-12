@@ -1,8 +1,11 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 use shared::structures::{
-    UserSettings,
-    user_settings::{locale::Locale, notifications::NotificationSettings, ui::UISettings},
+    user::UserSettings,
+    user_settings::{
+        prelude::{Locale, NotificationSettings, UISettings},
+        ui::{DarkMode, Rounding, Spacing, Theme},
+    },
 };
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
@@ -51,11 +54,28 @@ impl From<Model> for UserSettings {
                 active: model.notifications_active,
             },
             ui: UISettings {
-                dark_mode: model.theme_dark_mode,
-                theme: model.theme_color,
-                rounding: model.theme_rounding,
-                spacing: model.theme_spacing,
+                dark_mode: match model.theme_dark_mode.as_str() {
+                    "light" => DarkMode::Light,
+                    "dark" => DarkMode::Dark,
+                    _ => DarkMode::System,
+                },
+                theme: match model.theme_color.as_str() {
+                    "strawberry" => Theme::Strawberry,
+                    "blueberry" => Theme::Blueberry,
+                    _ => Theme::Default,
+                },
+                rounding: match model.theme_rounding.as_str() {
+                    "none" => Rounding::None,
+                    "full" => Rounding::Full,
+                    _ => Rounding::Default,
+                },
+                spacing: match model.theme_spacing.as_str() {
+                    "compact" => Spacing::Compact,
+                    "comfortable" => Spacing::Comfortable,
+                    _ => Spacing::Default,
+                },
             },
+            presence_presets: vec![],
         }
     }
 }

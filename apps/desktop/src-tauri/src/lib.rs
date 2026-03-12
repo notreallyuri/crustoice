@@ -47,6 +47,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             auth::prelude::close_splashscreen,
             auth::prelude::check_auth,
+            auth::prelude::get_token,
             auth::prelude::login,
             auth::prelude::logout,
             auth::prelude::register,
@@ -58,6 +59,7 @@ pub fn run() {
             user::prelude::update_email,
             user::prelude::change_password,
             guild::prelude::create_guild,
+            channel::prelude::get_channel_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

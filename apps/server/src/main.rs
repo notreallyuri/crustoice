@@ -7,7 +7,6 @@ use tower_http::cors::{Any, CorsLayer};
 
 pub mod entities;
 pub mod extractors;
-pub mod requests_http;
 pub mod routes;
 pub mod services;
 pub mod state;

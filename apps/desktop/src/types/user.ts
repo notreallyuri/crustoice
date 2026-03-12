@@ -10,6 +10,7 @@ export type UIDarkMode = "system" | "light" | "dark";
 export type UITheme = "default" | "strawberry" | "blueberry";
 export type Locale = "en-US" | "pt-BR";
 export type ActivityKind = "playing" | "streaming" | "listening" | "watching";
+export type RelationshipStatus = "";
 
 export interface User {
   id: UserId;
@@ -50,4 +51,20 @@ export interface UserSettings {
     active: boolean;
   };
   locale: Locale;
+}
+
+export interface UserRelationship {
+  user_id: UserId;
+  user: UserProfile;
+  status: RelationshipStatus;
+  since: string;
+}
+
+export interface UserPublic {
+  id: UserId;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  presence: UserPresence;
 }

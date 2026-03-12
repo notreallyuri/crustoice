@@ -5,9 +5,10 @@ type Props = {
   src: string;
   alt: string;
   className?: string;
+  animated?: boolean;
 };
 
-export function AvatarGif({ src, alt, className }: Props) {
+export function AvatarGif({ src, alt, className, animated }: Props) {
   const [staticSrc, setStaticSrc] = useState<string | null>(null);
 
   const isGif = src?.endsWith(".gif") || src?.includes(".gif?");
@@ -32,7 +33,7 @@ export function AvatarGif({ src, alt, className }: Props) {
 
   return (
     <AvatarImage
-      src={staticSrc}
+      src={animated ? src : staticSrc}
       alt={alt}
       className={className}
       onMouseEnter={(e) => (e.currentTarget.src = src)}

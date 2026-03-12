@@ -1,35 +1,17 @@
-use crate::structures::user_settings::{
-    locale::Locale, notifications::NotificationSettings, ui::UISettings,
-};
-
 use super::ids::UserId;
+use crate::structures::user_settings::prelude::{
+    Locale, NotificationSettings, PresencePreset, UISettings,
+};
 use sea_orm::FromJsonQueryResult;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub enum PresenceStatus {
+pub enum Status {
     Online,
     Busy,
     Away,
     Invisible,
     Offline,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub enum ActivityKind {
-    Playing,
-    Streaming,
-    Listening,
-    Reading,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub enum RelationshipStatus {
-    None,
-    Friend,
-    Blocked,
-    PendingIncoming,
-    PendingOutcoming,
 }
 
 // --- 1. Wrappers ---
@@ -72,30 +54,12 @@ pub struct UserSettings {
     pub ui: UISettings,
     pub locale: Locale,
     pub notifications: NotificationSettings,
+    pub presence_presets: Vec<PresencePreset>,
     pub developer_mode: bool,
 }
 
-// --- 3. Activity ---
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserPresence {
-    pub status: PresenceStatus,
-    pub custom_message: Option<String>,
-    pub activity: Option<UserActivity>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct UserActivity {
-    pub name: String,
-    pub kind: ActivityKind,
-}
-
-// --- 4. Relationship ---
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct UserRelationship {
-    pub id: UserId,
-    pub user: UserPublic,
-    pub status: RelationshipStatus,
-    pub since: String,
+    pub status: Status,
+    pub preset: Option<PresencePreset>,
 }

@@ -1,15 +1,27 @@
-import { Castle, ChevronDown, Cog, Home, Plus, LogOut } from "lucide-react";
+import {
+  Castle,
+  ChevronDown,
+  Cog,
+  Home,
+  Plus,
+  LogOut,
+  MoreHorizontal
+} from "lucide-react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuSubTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent
+  DropdownMenuTrigger
 } from "../ui/dropdown-menu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger
+} from "../ui/context-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +47,8 @@ type Props = {
   setCreateDialogOpen: (v: boolean) => void;
 };
 
+type GuildActionTarget = Guild | null;
+
 export function SidebarHeader({
   guilds,
   activeGuild,
@@ -45,20 +59,27 @@ export function SidebarHeader({
   const navigate = useNavigate();
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [actionTarget, setActionTarget] = useState<GuildActionTarget>(null);
 
   const handleLeaveGuild = async () => {
-    if (!activeGuild) return;
+    if (!actionTarget) return;
     setIsLeaving(true);
     try {
-      await leaveGuild(activeGuild.id);
+      await leaveGuild(actionTarget.id);
       navigate({ to: "/g/@me" });
-      toast.success(`Left ${activeGuild.name}`);
+      toast.success(`Left ${actionTarget.name}`);
     } catch (e) {
       toast.error("Failed to leave guild", { description: String(e) });
     } finally {
       setIsLeaving(false);
       setLeaveDialogOpen(false);
+      setActionTarget(null);
     }
+  };
+
+  const openLeaveDialog = (guild: Guild) => {
+    setActionTarget(guild);
+    setLeaveDialogOpen(true);
   };
 
   const triggerLabel = isHome
@@ -109,7 +130,6 @@ export function SidebarHeader({
               </Link>
             </DropdownMenuItem>
 
-            {/* Guild list */}
             {guilds.length > 0 && (
               <>
                 <DropdownMenuSeparator className="bg-white/10" />
@@ -117,58 +137,16 @@ export function SidebarHeader({
                   Your Guilds
                 </p>
                 {guilds.map((guild) => (
-                  <DropdownMenuItem
+                  <GuildRow
                     key={guild.id}
-                    asChild
-                    className="cursor-pointer group focus:text-white"
-                  >
-                    <Link
-                      to="/g/$guildId/$channelId"
-                      params={{
-                        guildId: guild.id,
-                        channelId: guild.default_channel_id
-                      }}
-                      className="flex w-full items-center gap-2"
-                    >
-                      <Avatar className="size-5 rounded-sm shrink-0 border border-white/10 group-hover:border-primary/50 transition-colors">
-                        <AvatarImage src={guild.icon_url ?? undefined} />
-                        <AvatarFallback className="text-[10px] rounded-sm">
-                          {guild.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="truncate">{guild.name}</span>
-                      {guild.id === activeGuild?.id && (
-                        <span className="ml-auto size-1.5 rounded-full bg-primary shrink-0" />
-                      )}
-                    </Link>
-                  </DropdownMenuItem>
+                    guild={guild}
+                    isActive={guild.id === activeGuild?.id}
+                    onLeave={() => openLeaveDialog(guild)}
+                    onSettings={() => {
+                      /* TODO */
+                    }}
+                  />
                 ))}
-              </>
-            )}
-
-            {activeGuild && (
-              <>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="cursor-pointer">
-                    <Castle className="size-4" />
-                    <span>Guild Options</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="border-white/10">
-                    <DropdownMenuItem className="cursor-pointer">
-                      <Cog className="size-4" />
-                      <span>General Settings</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-white/10" />
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive cursor-pointer"
-                      onClick={() => setLeaveDialogOpen(true)}
-                    >
-                      <LogOut className="size-4" />
-                      <span>Leave Guild</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
               </>
             )}
 
@@ -187,7 +165,7 @@ export function SidebarHeader({
       <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Leave {activeGuild?.name}?</AlertDialogTitle>
+            <AlertDialogTitle>Leave {actionTarget?.name}?</AlertDialogTitle>
             <AlertDialogDescription>
               You'll need an invite to rejoin. This cannot be undone.
             </AlertDialogDescription>
@@ -209,5 +187,93 @@ export function SidebarHeader({
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+type GuildRowProps = {
+  guild: Guild;
+  isActive: boolean;
+  onLeave: () => void;
+  onSettings: () => void;
+};
+
+function GuildRow({ guild, isActive, onLeave, onSettings }: GuildRowProps) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          className="relative flex items-center rounded-sm"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer flex-1 focus:text-white pr-8"
+          >
+            <Link
+              to="/g/$guildId/$channelId"
+              params={{
+                guildId: guild.id,
+                channelId: guild.default_channel_id
+              }}
+              className="flex w-full items-center gap-2"
+            >
+              <Avatar className="size-5 rounded-sm shrink-0 border border-white/10">
+                <AvatarImage src={guild.icon_url ?? undefined} />
+                <AvatarFallback className="text-[10px] rounded-sm">
+                  {guild.name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="truncate">{guild.name}</span>
+              {isActive && (
+                <span className="ml-auto size-1.5 rounded-full bg-primary shrink-0" />
+              )}
+            </Link>
+          </DropdownMenuItem>
+
+          {hovered && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 size-5 shrink-0 hover:bg-white/10"
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                // Simulate right-click to open context menu
+                const event = new MouseEvent("contextmenu", {
+                  bubbles: true,
+                  clientX: e.clientX,
+                  clientY: e.clientY
+                });
+                e.currentTarget.dispatchEvent(event);
+              }}
+            >
+              <MoreHorizontal className="size-3" />
+            </Button>
+          )}
+        </div>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent className="w-48 border-white/10">
+        <ContextMenuItem onClick={onSettings} className="cursor-pointer">
+          <Cog className="size-4" />
+          <span>Guild Settings</span>
+        </ContextMenuItem>
+        <ContextMenuSeparator className="bg-white/10" />
+        <ContextMenuItem
+          onClick={onLeave}
+          className="text-destructive focus:text-destructive cursor-pointer"
+        >
+          <LogOut className="size-4" />
+          <span>Leave Guild</span>
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

@@ -5,7 +5,7 @@ use crate::{
 use serde_json::json;
 use shared::{
     http::{requests::RegisterRequest, responses::AuthResponse},
-    structures::UserId,
+    structures::ids::UserId,
 };
 use tauri::{AppHandle, State};
 use tauri_plugin_store::StoreExt;

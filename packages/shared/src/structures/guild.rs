@@ -1,8 +1,7 @@
-use crate::structures::ChannelId;
-
 use super::{
     channel::{ChannelCategory, MessageChannel},
-    ids::{GuildId, UserId},
+    ids::{ChannelId, GuildId, UserId},
+    user::UserPublic,
 };
 use serde::{Deserialize, Serialize};
 
@@ -13,6 +12,16 @@ pub struct GuildMember {
     pub nickname: Option<String>,
     pub roles: Vec<String>,
     pub joined_at: String,
+    pub data: UserPublic,
+    pub identity: Option<GuildIdentity>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GuildIdentity {
+    pub display_name: String,
+    pub avatar_url: Option<String>,
+    pub bio: Option<String>,
+    pub show_global_username: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

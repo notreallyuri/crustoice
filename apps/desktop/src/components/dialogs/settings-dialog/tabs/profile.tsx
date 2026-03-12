@@ -135,16 +135,6 @@ export function ProfileSettings() {
             </div>
 
             <div className="flex gap-2 mb-1">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleSelectImage}
-                disabled={isSelecting || isUploadingAvatar}
-                className="text-xs"
-              >
-                <Camera className="size-3 mr-1" />
-                Change
-              </Button>
               {user.profile.avatar_url && (
                 <Button
                   variant="ghost"

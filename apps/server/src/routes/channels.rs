@@ -1,4 +1,4 @@
-use crate::{requests_http::channels, state::SharedState};
+use crate::{services::channels, state::SharedState};
 use axum::{
     Router,
     routing::{delete, get},

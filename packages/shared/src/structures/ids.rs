@@ -14,3 +14,6 @@ pub struct MessageId(pub String);
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct CategoryId(pub String);
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct PresetId(pub String);

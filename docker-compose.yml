@@ -18,6 +18,22 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  scylla:
+    image: scylladb/scylla
+    container_name: scylla
+    ports:
+      - "9042:9042"
+    volumes:
+      - scylla_data:/var/lib/scylla
+      - ./db/scylla/init.cql:/init.cql
+    command: --developer-mode=1 --smp=1 --memory=1024M
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status | grep UN"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 volumes:
   redis_data:
   postgres_data:
+  scylla_data:

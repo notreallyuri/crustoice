@@ -1,8 +1,9 @@
 use aws_sdk_s3::Client;
 use axum::extract::ws::Message;
 use deadpool_redis::{Config, Pool, Runtime};
+use scylla::client::{session::Session, session_builder::SessionBuilder};
 use sea_orm::DatabaseConnection;
-use shared::{protocol::ServerMessage, structures::UserId};
+use shared::{protocol::ServerMessage, structures::ids::UserId};
 use std::{
     collections::HashMap,
     env,
@@ -25,6 +26,7 @@ pub struct S3 {
 pub struct AppState {
     pub s3: S3,
     pub db: DatabaseConnection,
+    pub scylla: Session,
     pub sessions: RwLock<HashMap<UserId, ActiveSession>>,
     pub redis: Pool,
 }
@@ -68,11 +70,25 @@ impl AppState {
             .force_path_style(true)
             .build();
 
+        let scylla_url = env::var("SCYLLA_URL").expect("SCYLLA_URL must be set in .env");
+
+        let scylla = SessionBuilder::new()
+            .known_node(scylla_url)
+            .build()
+            .await
+            .expect("Failed to connect to scylla");
+
+        scylla
+            .use_keyspace("chat", false)
+            .await
+            .expect("Failed to select keyspace");
+
         Self {
             s3: S3 {
                 client: Client::from_conf(s3_config),
                 bucket: r2_bucket,
             },
+            scylla,
             db,
             sessions: RwLock::new(HashMap::new()),
             redis,

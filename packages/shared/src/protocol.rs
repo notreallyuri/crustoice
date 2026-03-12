@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::structures::{
-    ChannelId, Guild, Message, User, UserPresence, UserPublic, UserRelationship, error::ErrorCode,
+use crate::structures::prelude::{
+    ChannelId, Guild, GuildId, GuildMember, Message, User, UserPresence, UserPublic,
+    UserRelationship,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -38,11 +39,17 @@ pub enum ServerMessage {
     Message {
         message: Message,
     },
+    GuildJoined {
+        guild: Guild,
+    },
+    MemberJoined {
+        guild_id: GuildId,
+        member: GuildMember,
+    },
     RelationshipUpdate {
         relationship: UserRelationship,
     },
     Error {
-        code: ErrorCode,
         message: String,
     },
 }

@@ -1,4 +1,4 @@
-use crate::services::jwt::verify_token;
+use crate::services::auth::jwt::verify_token;
 use axum::{
     extract::FromRequestParts,
     http::{StatusCode, request::Parts},

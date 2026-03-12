@@ -6,7 +6,7 @@ import {
   GuildId,
   User,
   UserId,
-  UserProfile
+  UserPublic
 } from "@/types";
 import {
   CreateChannelPayload,
@@ -77,9 +77,10 @@ export interface AppState {
   currentUser: User | null;
   guilds: Guild[];
   messages: Record<ChannelId, ChatMessage[]>;
-  userCache: Record<UserId, UserProfile>;
+  userCache: Record<UserId, UserPublic>;
   activeChannelId: ChannelId | null;
   activeGuildId: GuildId | null;
+  ws: WebSocket | null;
 }
 
 export type AppStore = AppState & AppRepository;

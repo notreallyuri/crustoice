@@ -1,4 +1,4 @@
-use crate::structures::{CategoryId, UserId};
+use crate::structures::ids::{CategoryId, UserId};
 use serde::{Deserialize, Serialize};
 
 // --- Auth ---
@@ -69,16 +69,26 @@ pub struct RemoveGuildMemberRequest {
     pub user_id: UserId,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct GuildInviteRequest {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JoinGuildRequest {
     pub invite_code: String,
+    pub identity: Option<GuildIdentityRequest>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GuildIdentityRequest {
+    pub display_name: String,
+    pub avatar_url: Option<String>,
+    pub bio: Option<String>,
+    pub show_global_username: bool,
 }
 
 // --- Channel ---
 
 #[derive(Deserialize)]
 pub struct HistoryQuery {
-    pub before: Option<String>,
+    pub limit: Option<i64>,
+    pub before: Option<i64>,
 }
 
 // --- Relationships ---

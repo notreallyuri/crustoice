@@ -13,6 +13,12 @@ pub struct Model {
     pub nickname: Option<String>,
     pub roles: Option<Json>,
     pub joined_at: DateTime,
+
+    pub identity_enabled: bool,
+    pub identity_display_name: Option<String>,
+    pub identity_avatar_url: Option<String>,
+    pub identity_bio: Option<String>,
+    pub identity_show_global_username: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -1,5 +1,5 @@
 import { CategoryId, ChannelId, GuildId, UserId } from "./ids";
-import { ChatMessage } from "./intents";
+import { UserPublic } from "./user";
 
 export interface ChannelCategory {
   id: CategoryId;
@@ -14,7 +14,6 @@ export interface MessageChannel {
   category_id: CategoryId | null;
   name: string;
   position: number;
-  history: ChatMessage[];
 }
 
 export interface GuildMember {
@@ -23,6 +22,7 @@ export interface GuildMember {
   nickname: string | null;
   roles: string[];
   joined_at: string;
+  data: UserPublic;
 }
 
 export interface Guild {
@@ -34,7 +34,7 @@ export interface Guild {
 
   default_channel_id: ChannelId;
 
-  members: UserId[];
+  members: GuildMember[];
   categories: ChannelCategory[];
   channels: MessageChannel[];
 }

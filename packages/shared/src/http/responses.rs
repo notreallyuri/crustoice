@@ -1,6 +1,5 @@
+use crate::structures::ids::UserId;
 use serde::{Deserialize, Serialize};
-
-use crate::structures::UserId;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthResponse {

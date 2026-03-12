@@ -2,7 +2,7 @@ use crate::{
     client_state::ClientState, general::upload::upload_internal, structures::error::AppError,
     API_URL,
 };
-use shared::{http::requests::CreateGuildRequest, structures::Guild};
+use shared::{http::prelude::CreateGuildRequest, structures::guild::Guild};
 use tauri::State;
 
 #[tauri::command]

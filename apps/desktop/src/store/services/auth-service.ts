@@ -14,11 +14,7 @@ export const createAuthService: StateCreator<
       if (get().currentUser) return;
 
       await invoke("check_auth");
-
-      await get().getMe();
-      await get().getGuilds();
-
-      console.log("Session restored successfully.");
+      await get().initWebSocket();
     } catch (e) {
       console.log("Failed to restore session:", e);
       throw e;
@@ -29,9 +25,6 @@ export const createAuthService: StateCreator<
     await invoke<string>("login", {
       payload
     });
-
-    await get().getMe();
-    await get().getGuilds();
   },
 
   async register(payload, avatarPath, crop) {
@@ -40,8 +33,6 @@ export const createAuthService: StateCreator<
       avatarPath,
       crop
     });
-
-    await get().getMe();
   },
 
   async logout() {
@@ -54,15 +45,15 @@ export const createAuthService: StateCreator<
         messages: {},
         userCache: {},
         activeChannelId: null,
-        activeGuildId: null
+        activeGuildId: null,
+        ws: null
       });
     } catch (e) {
       toast.error("Logout failed. Please try again.");
       set({
-        currentUser: undefined,
-        activeGuildId: null,
-        activeChannelId: null,
-        guilds: []
+        currentUser: null,
+        guilds: [],
+        ws: null
       });
     }
   }

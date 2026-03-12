@@ -5,5 +5,5 @@ export interface ChatMessage {
   channel_id: ChannelId;
   author_id: UserId;
   content: string;
-  timestamp: string;
+  created_at: string;
 }
