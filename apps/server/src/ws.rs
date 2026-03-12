@@ -46,7 +46,14 @@ async fn handle_socket(socket: WebSocket, state: SharedState) {
                         let user_id = UserId(raw_id);
                         println!("Socket {} authenticated as {}", socket_id, user_id.0);
 
-                        match handle_identify(&state, user_id.clone(), tx.clone()).await {
+                        match handle_identify(
+                            &state,
+                            user_id.clone(),
+                            socket_id.clone(),
+                            tx.clone(),
+                        )
+                        .await
+                        {
                             Ok(_) => break user_id,
                             Err(e) => {
                                 eprintln!("Identity failed for socket {}: {}", socket_id, e);
@@ -107,15 +114,29 @@ async fn handle_socket(socket: WebSocket, state: SharedState) {
         }
     }
 
-    println!("User {} disconnected.", current_user_id.0);
     heartbeat.abort();
     send_task.abort();
-    state
-        .sessions
-        .write()
-        .unwrap_or_else(|e| e.into_inner())
-        .remove(&current_user_id);
-    let _ = handle_disconnect(&state, current_user_id).await;
+
+    let is_last_session = {
+        let mut sessions = state.sessions.write().unwrap_or_else(|e| e.into_inner());
+
+        let is_last = if let Some(user_sessions) = sessions.get_mut(&current_user_id) {
+            user_sessions.remove(&socket_id);
+            user_sessions.is_empty()
+        } else {
+            true
+        };
+
+        if is_last {
+            sessions.remove(&current_user_id);
+        }
+
+        is_last
+    };
+
+    if is_last_session {
+        let _ = handle_disconnect(&state, current_user_id).await;
+    }
 }
 
 async fn handle_authenticated_message(
@@ -139,8 +160,8 @@ async fn handle_authenticated_message(
             }
         }
         ClientMessage::SetPresence { presence } => {
-            if let Err(e) = set_presence(state, user_id, &presence).await {
-                eprintln!("Presence error for {}: {}", user_id.0, e);
+            if let Err(e) = handle_set_presence(state, user_id, presence).await {
+                eprintln!("Failed to set presence for {}: {}", user_id.0, e);
             }
         }
         ClientMessage::Identify { .. } => {}

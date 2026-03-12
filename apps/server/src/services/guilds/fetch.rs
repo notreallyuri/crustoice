@@ -1,15 +1,15 @@
-use crate::entities::{categories, channels, guild_members, prelude::*};
-use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter};
+use crate::{
+    entities::{categories, channels, guild_members, prelude::*},
+    state::SharedState,
+};
+use sea_orm::{ColumnTrait, DbErr, EntityTrait, QueryFilter};
 use shared::structures::prelude::*;
 
-pub async fn get_user_guilds(
-    db: &DatabaseConnection,
-    user_id: &UserId,
-) -> Result<Vec<Guild>, DbErr> {
+pub async fn get_user_guilds(state: &SharedState, user_id: &UserId) -> Result<Vec<Guild>, DbErr> {
     let memberships = GuildMembers::find()
         .filter(guild_members::Column::UserId.eq(&user_id.0))
         .find_also_related(Guilds)
-        .all(db)
+        .all(&state.db)
         .await?;
 
     let mut result = vec![];
@@ -20,41 +20,57 @@ pub async fn get_user_guilds(
         let member_models = GuildMembers::find()
             .filter(guild_members::Column::GuildId.eq(&g.id))
             .find_also_related(Users)
-            .all(db)
+            .all(&state.db)
             .await?;
 
-        let members = member_models
-            .into_iter()
-            .filter_map(|(m, user_opt)| {
-                let u = user_opt?;
+        let mut members = Vec::new();
 
-                Some(GuildMember {
-                    guild_id: GuildId(m.guild_id),
-                    user_id: UserId(m.user_id),
-                    nickname: m.nickname,
-                    roles: vec![],
-                    joined_at: m.joined_at.to_string(),
-                    data: UserPublic {
-                        id: UserId(u.id),
-                        profile: UserProfile {
-                            display_name: u.display_name.unwrap_or_else(|| u.username.clone()),
-                            username: u.username,
-                            avatar_url: u.avatar_url,
-                            bio: u.bio,
-                        },
-                        presence: UserPresence {
-                            status: Status::Offline,
-                            preset: None,
-                        },
+        for (m, user_opt) in member_models {
+            let Some(u) = user_opt else { continue };
+
+            let presence =
+                crate::services::ws::presence::get_presence(state, &UserId(m.user_id.clone()))
+                    .await
+                    .unwrap_or(UserPresence {
+                        status: Status::Offline,
+                        preset: None,
+                    });
+
+            members.push(GuildMember {
+                guild_id: GuildId(m.guild_id),
+                user_id: UserId(m.user_id),
+                nickname: m.nickname,
+                roles: m
+                    .roles
+                    .and_then(|j| serde_json::from_value(j).ok())
+                    .unwrap_or_default(),
+                joined_at: m.joined_at.to_string(),
+                data: UserPublic {
+                    id: UserId(u.id),
+                    profile: UserProfile {
+                        display_name: u.display_name.unwrap_or_else(|| u.username.clone()),
+                        username: u.username,
+                        avatar_url: u.avatar_url,
+                        bio: u.bio,
                     },
-                    identity: None,
-                })
-            })
-            .collect();
+                    presence,
+                },
+                identity: if m.identity_enabled {
+                    Some(GuildIdentity {
+                        display_name: m.identity_display_name.unwrap_or_default(),
+                        avatar_url: m.identity_avatar_url,
+                        bio: m.identity_bio,
+                        show_global_username: m.identity_show_global_username,
+                    })
+                } else {
+                    None
+                },
+            });
+        }
 
         let category_models = Categories::find()
             .filter(categories::Column::GuildId.eq(&g.id))
-            .all(db)
+            .all(&state.db)
             .await?;
 
         let categories: Vec<ChannelCategory> = category_models
@@ -69,7 +85,7 @@ pub async fn get_user_guilds(
 
         let channel_models = Channels::find()
             .filter(channels::Column::GuildId.eq(&g.id))
-            .all(db)
+            .all(&state.db)
             .await?;
 
         let channels: Vec<MessageChannel> = channel_models
@@ -84,15 +100,13 @@ pub async fn get_user_guilds(
             })
             .collect();
 
-        let default_channel_id = channels.first().map(|c| c.id.clone());
-
         result.push(Guild {
             id: GuildId(g.id),
             name: g.name,
             icon_url: g.icon_url,
             banner_url: g.banner_url,
             owner_id: UserId(g.owner_id),
-            default_channel_id,
+            default_channel_id: g.default_channel_id.map(ChannelId),
             members,
             categories,
             channels,

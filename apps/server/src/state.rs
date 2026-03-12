@@ -27,7 +27,7 @@ pub struct AppState {
     pub s3: S3,
     pub db: DatabaseConnection,
     pub scylla: Session,
-    pub sessions: RwLock<HashMap<UserId, ActiveSession>>,
+    pub sessions: RwLock<HashMap<UserId, HashMap<String, ActiveSession>>>,
     pub redis: Pool,
 }
 
@@ -98,10 +98,14 @@ impl AppState {
     pub fn send_to_user(&self, user_id: &UserId, message: &ServerMessage) {
         let sessions = self.sessions.read().unwrap_or_else(|e| e.into_inner());
 
-        if let Some(session) = sessions.get(user_id)
+        if let Some(user_sessions) = sessions.get(user_id)
             && let Ok(json) = serde_json::to_string(message)
         {
-            let _ = session.tx.send(Message::Text(json.into()));
+            let ws_msg = Message::Text(json.into());
+
+            for session in user_sessions.values() {
+                let _ = session.tx.send(ws_msg.clone());
+            }
         }
     }
 }

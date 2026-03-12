@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::entities::guild_members;
 use crate::entities::prelude::*;
 use crate::services::{guilds::fetch::get_user_guilds, users::prelude::*};
@@ -12,7 +14,12 @@ use shared::{
 
 use super::presence;
 
-pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Result<(), String> {
+pub async fn handle_identify(
+    state: &SharedState,
+    user_id: UserId,
+    socket_id: String,
+    tx: Tx,
+) -> Result<(), String> {
     let user_data = {
         Users::find_by_id(&user_id.0)
             .one(&state.db)
@@ -25,18 +32,32 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
         .sessions
         .write()
         .unwrap_or_else(|e| e.into_inner())
+        .entry(user_id.clone())
+        .or_default()
         .insert(
-            user_id.clone(),
+            socket_id.clone(),
             ActiveSession {
                 tx,
                 user_id: user_id.clone(),
             },
         );
 
-    let initial_presence = UserPresence {
-        status: Status::Online,
-        preset: None,
+    let initial_presence = presence::get_presence(state, &user_id)
+        .await
+        .unwrap_or(UserPresence {
+            status: Status::Online,
+            preset: None,
+        });
+
+    let initial_presence = if initial_presence.status == Status::Offline {
+        UserPresence {
+            status: Status::Online,
+            preset: None,
+        }
+    } else {
+        initial_presence
     };
+
     presence::set_presence(state, &user_id, &initial_presence).await?;
 
     let display_name = user_data
@@ -80,7 +101,7 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
     state.send_to_user(&user_id, &ServerMessage::IdentityValidated { user });
 
     match (
-        get_user_guilds(&state.db, &user_id).await,
+        get_user_guilds(state, &user_id).await,
         get_user_relationships(&state.db, &user_id).await,
     ) {
         (Ok(guilds), Ok(relationships)) => {
@@ -121,13 +142,6 @@ pub async fn handle_identify(state: &SharedState, user_id: UserId, tx: Tx) -> Re
 }
 
 pub async fn handle_disconnect(state: &SharedState, user_id: UserId) {
-    let offline_presence = UserPresence {
-        status: Status::Offline,
-        preset: None,
-    };
-
-    let _ = presence::set_presence(state, &user_id, &offline_presence).await;
-
     let guild_memberships = GuildMembers::find()
         .filter(guild_members::Column::UserId.eq(&user_id.0))
         .all(&state.db)
@@ -140,6 +154,11 @@ pub async fn handle_disconnect(state: &SharedState, user_id: UserId) {
     }
 
     if let Ok(Some(profile)) = get_user_profile(&state.db, &user_id).await {
+        let offline_presence = UserPresence {
+            status: Status::Offline,
+            preset: None,
+        };
+
         let public_user = UserPublic {
             id: user_id.clone(),
             profile,

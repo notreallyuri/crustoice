@@ -25,11 +25,13 @@ pub async fn get_channel_history(
         )
     })?;
 
+    // 99808-1179
+
     let rows = if let Some(before_ms) = query.before {
         state
             .scylla
             .query_unpaged(
-                "SELECT id, channel_id, author_id, content, created_at
+                "SELECT id, channel_id, author_id, content, created_at, edited_at
                  FROM messages
                  WHERE channel_id = ? AND created_at < ?
                  LIMIT ?",
@@ -40,7 +42,7 @@ pub async fn get_channel_history(
         state
             .scylla
             .query_unpaged(
-                "SELECT id, channel_id, author_id, content, created_at
+                "SELECT id, channel_id, author_id, content, created_at, edited_at
                  FROM messages
                  WHERE channel_id = ?
                  LIMIT ?",
@@ -59,20 +61,27 @@ pub async fn get_channel_history(
     })?;
 
     let mut messages: Vec<Message> = rows
-        .rows::<(Uuid, Uuid, Uuid, String, CqlTimestamp)>()
+        .rows::<(Uuid, Uuid, Uuid, String, CqlTimestamp, Option<CqlTimestamp>)>()
         .map_err(|e| {
             eprintln!("rows deserialization error: {}", e);
             (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
         })?
-        .filter_map(|r| r.ok())
+        .filter_map(|r| {
+            r.map_err(|e| eprintln!("Failed to deserialize message row: {e}"))
+                .ok()
+        })
         .map(
-            |(id, channel_id, author_id, content, created_at_ms)| Message {
+            |(id, channel_id, author_id, content, created_at_ms, edited_at_ms)| Message {
                 id: MessageId(id.to_string()),
                 channel_id: ChannelId(channel_id.to_string()),
                 author_id: UserId(author_id.to_string()),
                 content,
-                created_at: created_at_ms.0.to_string(),
-                updated_at: String::new(),
+                created_at: chrono::DateTime::from_timestamp_millis(created_at_ms.0)
+                    .map(|dt| dt.to_rfc3339())
+                    .unwrap_or_default(),
+                edited_at: edited_at_ms.and_then(|ts| {
+                    chrono::DateTime::from_timestamp_millis(ts.0).map(|dt| dt.to_rfc3339())
+                }),
             },
         )
         .collect();

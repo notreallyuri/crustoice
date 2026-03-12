@@ -16,7 +16,7 @@ pub async fn create_guild(
 ) -> Result<(StatusCode, Json<Guild>), (StatusCode, String)> {
     let guild_id = Uuid::new_v4().to_string();
     let channel_id = Uuid::new_v4().to_string();
-    let now = chrono::Utc::now().naive_utc();
+    let now = chrono::Utc::now().into();
 
     let new_guild = guilds::ActiveModel {
         id: Set(guild_id.clone()),

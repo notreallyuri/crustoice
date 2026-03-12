@@ -12,7 +12,7 @@ pub struct Model {
     pub user_id: String,
     pub nickname: Option<String>,
     pub roles: Option<Json>,
-    pub joined_at: DateTime,
+    pub joined_at: DateTimeWithTimeZone,
 
     pub identity_enabled: bool,
     pub identity_display_name: Option<String>,

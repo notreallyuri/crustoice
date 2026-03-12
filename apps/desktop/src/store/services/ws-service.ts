@@ -50,7 +50,18 @@ export const createWebSocketService: StateCreator<
 
       set({ ws });
     });
-  }
+  },
+  setPresence(presence) {
+    const ws = get().ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify({ type: "SetPresence", presence }));
+
+    const currentUser = get().currentUser;
+    if (currentUser) {
+      set({ currentUser: { ...currentUser, presence } });
+    }
+  },
+  sendMessage(content) {}
 });
 
 function handleServerMessage(
@@ -69,11 +80,13 @@ function handleServerMessage(
   _ws: WebSocket
 ) {
   switch (msg.type) {
-    case "IdentityValidated":
+    case "IdentityValidated": {
       set({ currentUser: msg.user });
-      break;
 
-    case "InitialState":
+      break;
+    }
+
+    case "InitialState": {
       const userCache: Record<string, UserPublic> = {};
       for (const guild of msg.guilds) {
         for (const member of guild.members) {
@@ -82,6 +95,25 @@ function handleServerMessage(
       }
       set({ guilds: msg.guilds, userCache });
       break;
+    }
+
+    case "GuildJoined": {
+      set((state: AppStore) => ({
+        guilds: [...state.guilds, msg.guild]
+      }));
+      break;
+    }
+
+    case "MemberJoined": {
+      set((state: AppStore) => ({
+        guilds: state.guilds.map((guild) =>
+          guild.id === msg.guild_id
+            ? { ...guild, members: [...guild.members, msg.member] }
+            : guild
+        )
+      }));
+      break;
+    }
 
     case "Message": {
       const { message } = msg;
@@ -100,9 +132,37 @@ function handleServerMessage(
       break;
     }
 
-    case "PresenceUpdate":
-      // TODO: update user presence in cache
+    case "PresenceUpdate": {
+      const { user } = msg;
+
+      set((state: AppStore) => {
+        const updatedCache = {
+          ...state.userCache,
+          [user.id]: user
+        };
+
+        const updatedGuilds = state.guilds.map((guild) => ({
+          ...guild,
+          members: guild.members.map((member) =>
+            member.user_id === user.id ? { ...member, data: user } : member
+          )
+        }));
+
+        const currentUser = state.currentUser;
+        const updatedCurrentUser =
+          currentUser && currentUser.id === user.id
+            ? { ...currentUser, presence: user.presence }
+            : currentUser;
+
+        return {
+          userCache: updatedCache,
+          guilds: updatedGuilds,
+          currentUser: updatedCurrentUser
+        };
+      });
+
       break;
+    }
 
     case "Error":
       console.error("WS server error:", msg.message);

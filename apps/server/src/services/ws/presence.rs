@@ -1,6 +1,49 @@
 use crate::state::SharedState;
 use deadpool_redis::redis::cmd;
-use shared::structures::prelude::{GuildId, Status, UserId, UserPresence};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use shared::{
+    protocol::ServerMessage,
+    structures::{
+        prelude::{GuildId, Status, UserId, UserPresence},
+        user::UserPublic,
+    },
+};
+
+pub async fn handle_set_presence(
+    state: &SharedState,
+    user_id: &UserId,
+    presence: UserPresence,
+) -> Result<(), String> {
+    set_presence(state, user_id, &presence).await?;
+
+    let profile = crate::services::users::fetch::get_user_profile(&state.db, user_id)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("User not found".to_string())?;
+
+    let public_user = UserPublic {
+        id: user_id.clone(),
+        profile,
+        presence,
+    };
+
+    let msg = ServerMessage::PresenceUpdate { user: public_user };
+
+    let guild_memberships = crate::entities::prelude::GuildMembers::find()
+        .filter(crate::entities::guild_members::Column::UserId.eq(&user_id.0))
+        .all(&state.db)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    for membership in &guild_memberships {
+        let guild_id = GuildId(membership.guild_id.clone());
+        super::broadcast::to_guild(state, &guild_id, &msg).await;
+    }
+
+    super::broadcast::to_friends(state, user_id, &msg).await;
+
+    Ok(())
+}
 
 pub async fn set_presence(
     state: &SharedState,

@@ -1,11 +1,36 @@
 import { UserId } from "./ids";
 
 export type PresenceStatus =
-  | "online"
-  | "away"
-  | "busy"
-  | "invisible"
-  | "offline";
+  | "Online"
+  | "Away"
+  | "Busy"
+  | "Invisible"
+  | "Offline";
+
+export type PresenceTimer =
+  | "Elapsed"
+  | { Countdown: { seconds: number } }
+  | "None";
+
+export type PresenceKind = "Fixed" | { AppLinked: { process_name: string } };
+
+export type Emoji =
+  | { Unicode: { value: string } }
+  | { Custom: { id: string; name: string; url: string } };
+
+export type PresenceIcon =
+  | { CustomUpload: { path_url: string } }
+  | { Emoji: { emoji: Emoji } }
+  | { AppIcon: { process_name: string } };
+
+export interface PresencePreset {
+  id: string;
+  label: string;
+  icon: PresenceIcon;
+  timer: PresenceTimer;
+  kind: PresenceKind;
+}
+
 export type UIDarkMode = "system" | "light" | "dark";
 export type UITheme = "default" | "strawberry" | "blueberry";
 export type Locale = "en-US" | "pt-BR";
@@ -34,7 +59,7 @@ export interface UserProfile {
 
 export interface UserPresence {
   status: PresenceStatus;
-  custom_message: string | null;
+  preset: PresencePreset | null;
 }
 
 export interface UserActivity {
@@ -51,6 +76,7 @@ export interface UserSettings {
     active: boolean;
   };
   locale: Locale;
+  presence_presets: PresencePreset[];
 }
 
 export interface UserRelationship {

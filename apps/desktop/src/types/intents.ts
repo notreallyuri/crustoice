@@ -6,4 +6,5 @@ export interface ChatMessage {
   author_id: UserId;
   content: string;
   created_at: string;
+  edited_at: string | null;
 }

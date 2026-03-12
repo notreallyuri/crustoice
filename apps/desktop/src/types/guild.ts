@@ -16,6 +16,13 @@ export interface MessageChannel {
   position: number;
 }
 
+export interface GuildIdentity {
+  display_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  show_global_username: boolean;
+}
+
 export interface GuildMember {
   guild_id: GuildId;
   user_id: UserId;
@@ -23,6 +30,7 @@ export interface GuildMember {
   roles: string[];
   joined_at: string;
   data: UserPublic;
+  identity: GuildIdentity | null;
 }
 
 export interface Guild {
@@ -32,7 +40,7 @@ export interface Guild {
   icon_url: string | null;
   banner_url: string | null;
 
-  default_channel_id: ChannelId;
+  default_channel_id: ChannelId | null;
 
   members: GuildMember[];
   categories: ChannelCategory[];

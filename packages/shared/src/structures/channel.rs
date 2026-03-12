@@ -8,7 +8,7 @@ pub struct Message {
     pub author_id: UserId,
     pub content: String,
     pub created_at: String,
-    pub updated_at: String,
+    pub edited_at: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

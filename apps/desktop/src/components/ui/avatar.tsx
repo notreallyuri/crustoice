@@ -61,11 +61,11 @@ function AvatarBadge({
   status?: PresenceStatus;
 }) {
   const statusMap: Record<PresenceStatus, string> = {
-    online: "bg-green-500",
-    away: "bg-yellow-500",
-    busy: "bg-red-500",
-    offline: "bg-gray-500",
-    invisible: "bg-gray-500"
+    Online: "bg-green-500",
+    Away: "bg-yellow-500",
+    Busy: "bg-red-500",
+    Offline: "bg-gray-500",
+    Invisible: "bg-gray-500"
   };
 
   return (

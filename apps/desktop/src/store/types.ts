@@ -6,6 +6,7 @@ import {
   GuildId,
   User,
   UserId,
+  UserPresence,
   UserPublic
 } from "@/types";
 import {
@@ -65,6 +66,8 @@ export interface ChannelRepository {
 
 export interface WebSocketRepository {
   initWebSocket: () => Promise<void>;
+  setPresence: (presence: UserPresence) => void;
+  sendMessage: (content: string) => void;
 }
 
 export type AppRepository = GuildRepository &

@@ -35,7 +35,7 @@ pub async fn create_invite(
     }
 
     let short_code: String = Uuid::new_v4().simple().to_string()[..8].to_string();
-    let now = chrono::Utc::now().naive_utc();
+    let now = chrono::Utc::now().into();
 
     let expires_at = payload.expires_in_seconds.map(|seconds| {
         now + chrono::Duration::try_seconds(seconds).unwrap_or(chrono::Duration::zero())

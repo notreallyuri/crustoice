@@ -28,7 +28,7 @@ pub async fn join_guild(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or((StatusCode::NOT_FOUND, "Invalid invite code".to_string()))?;
 
-    let now = chrono::Utc::now().naive_utc();
+    let now = chrono::Utc::now().into();
     if let Some(expires_at) = invite.expires_at
         && now > expires_at
     {
@@ -85,7 +85,7 @@ pub async fn join_guild(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     if let Ok(guilds) =
-        crate::services::guilds::fetch::get_user_guilds(&state.db, &UserId(user_id.clone())).await
+        crate::services::guilds::fetch::get_user_guilds(&state, &UserId(user_id.clone())).await
         && let Some(guild) = guilds.into_iter().find(|g| g.id.0 == invite.guild_id)
     {
         let new_member = guild

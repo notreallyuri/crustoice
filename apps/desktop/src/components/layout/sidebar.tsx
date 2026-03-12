@@ -72,9 +72,6 @@ function CategoryGroup({
   guildId: string;
   activeChannelId?: string;
 }) {
-  const hasActiveChannel = category.channels.some(
-    (ch) => ch.id === activeChannelId
-  );
   const [collapsed, setCollapsed] = useState(false);
 
   return (

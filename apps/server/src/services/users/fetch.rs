@@ -15,7 +15,7 @@ pub async fn get_guilds(
     State(state): State<SharedState>,
     AuthedUser(user_id): AuthedUser,
 ) -> Result<Json<Vec<Guild>>, (StatusCode, String)> {
-    let guilds = crate::services::guilds::fetch::get_user_guilds(&state.db, &UserId(user_id))
+    let guilds = crate::services::guilds::fetch::get_user_guilds(&state, &UserId(user_id))
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -144,6 +144,13 @@ pub async fn get_me(
         _ => user.username.clone(),
     };
 
+    let presence = crate::services::ws::presence::get_presence(&state, &UserId(user_id.clone()))
+        .await
+        .unwrap_or(UserPresence {
+            status: Status::Offline,
+            preset: None,
+        });
+
     let user = User {
         id: UserId(user_id.clone()),
         account: UserAccount {
@@ -159,10 +166,7 @@ pub async fn get_me(
         settings: get_full_user_settings(&user_id, &state.db)
             .await
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?,
-        presence: UserPresence {
-            status: Status::Online,
-            preset: None,
-        },
+        presence,
     };
 
     Ok(Json(user))

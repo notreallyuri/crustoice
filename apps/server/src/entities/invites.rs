@@ -11,8 +11,8 @@ pub struct Model {
     pub max_uses: i32,
     pub uses: i32,
     pub requires_approval: bool,
-    pub expires_at: Option<DateTime>,
-    pub created_at: DateTime,
+    pub expires_at: Option<DateTimeWithTimeZone>,
+    pub created_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

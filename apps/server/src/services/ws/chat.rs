@@ -13,7 +13,7 @@ pub async fn handle_chat(
     state: &SharedState,
     author_id: UserId,
 ) -> Result<(), String> {
-    let channel = Channels::find_by_id(channel_id.0.clone())
+    let channel = Channels::find_by_id(&channel_id.0)
         .one(&state.db)
         .await
         .map_err(|e| e.to_string())?
@@ -49,11 +49,11 @@ pub async fn handle_chat(
     let payload = ServerMessage::Message {
         message: Message {
             id: MessageId(message_id.to_string()),
-            channel_id: channel_id.clone(),
-            author_id: author_id.clone(),
+            channel_id,
+            author_id,
             content,
             created_at: now.to_rfc3339(),
-            updated_at: String::new(),
+            edited_at: None,
         },
     };
 

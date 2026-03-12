@@ -11,7 +11,7 @@ import {
   User as UserIcon
 } from "lucide-react";
 import { Avatar, AvatarBadge, AvatarFallback } from "@/components/ui/avatar";
-import { UserProfileCard } from "./profile-card";
+import { MyUserProfileCard, UserProfileCard } from "./profile-card";
 import { AvatarGif } from "../avatar-gif";
 import {
   Tooltip,
@@ -78,7 +78,7 @@ export function SidebarFooter({ currentUser, setSettingsDialogOpen }: Props) {
           align="start"
           className="ml-0.5 w-72 p-0 overflow-hidden"
         >
-          <UserProfileCard user={publicFromUser(currentUser)} />
+          <MyUserProfileCard user={publicFromUser(currentUser)} />
         </PopoverContent>
       </Popover>
 
