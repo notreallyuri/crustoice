@@ -115,7 +115,7 @@ export function ProfileSettings() {
             <div className="relative group">
               <Avatar className="size-20 border-4 border-background ring-2 ring-border">
                 <AvatarImage src={user.profile.avatar_url || undefined} />
-                <AvatarFallback className="text-2xl bg-primary/20">
+                <AvatarFallback className="text-2xl bg-primary">
                   {user.profile.display_name.charAt(0)}
                 </AvatarFallback>
               </Avatar>

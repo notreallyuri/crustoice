@@ -31,7 +31,7 @@ export function MyUserProfileCard({ user, className }: Props) {
                 animated
               />
             ) : (
-              <AvatarFallback className="bg-red-700/90 text-lg">
+              <AvatarFallback className="bg-primary/90 text-lg">
                 <UserIcon size={24} />
               </AvatarFallback>
             )}

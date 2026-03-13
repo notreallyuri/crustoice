@@ -11,7 +11,7 @@ import {
   User as UserIcon
 } from "lucide-react";
 import { Avatar, AvatarBadge, AvatarFallback } from "@/components/ui/avatar";
-import { MyUserProfileCard, UserProfileCard } from "./profile-card";
+import { MyUserProfileCard } from "./profile-card";
 import { AvatarGif } from "../avatar-gif";
 import {
   Tooltip,
@@ -44,104 +44,106 @@ export function SidebarFooter({ currentUser, setSettingsDialogOpen }: Props) {
   console.log("Presence status:", currentUser.presence.status);
 
   return (
-    <ShadSidebarFooter className="h-14 flex-row items-center justify-between px-2 py-1.5 border-t border-border/50 bg-background/80 backdrop-blur-sm relative">
-      <Popover>
-        <PopoverTrigger asChild>
-          <button
-            className="flex flex-1 min-w-0 cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-white/8 group"
-            type="button"
+    <ShadSidebarFooter className="  flex-row items-center justify-between px-2 py-2 relative">
+      <div className="border flex w-full">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              className="flex flex-1 min-w-0 cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-white/8 group"
+              type="button"
+            >
+              <div className="relative ">
+                <Avatar>
+                  {currentUser.profile.avatar_url && (
+                    <AvatarGif src={currentUser.profile.avatar_url} alt="" />
+                  )}
+                  <AvatarFallback>
+                    <UserIcon size={16} />
+                  </AvatarFallback>
+                  <AvatarBadge status={currentUser.presence.status} />
+                </Avatar>
+              </div>
+
+              <div className="flex flex-col truncate leading-tight text-left">
+                <span className="truncate text-sm font-semibold text-foreground group-hover:text-white transition-colors">
+                  {currentUser.profile.display_name}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  @{currentUser.profile.username}
+                </span>
+              </div>
+            </button>
+          </PopoverTrigger>
+
+          <PopoverContent
+            align="start"
+            className="ml-0.5 w-72 p-0 overflow-hidden"
           >
-            <div className="relative ">
-              <Avatar>
-                {currentUser.profile.avatar_url && (
-                  <AvatarGif src={currentUser.profile.avatar_url} alt="" />
+            <MyUserProfileCard user={publicFromUser(currentUser)} />
+          </PopoverContent>
+        </Popover>
+
+        <div className="flex shrink-0 items-center gap-0.5 ml-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer transition-colors",
+                  muted && "text-destructive hover:text-destructive"
                 )}
-                <AvatarFallback>
-                  <UserIcon size={16} />
-                </AvatarFallback>
-                <AvatarBadge status={currentUser.presence.status} />
-              </Avatar>
-            </div>
+                onClick={() => setMuted((m) => !m)}
+              >
+                {muted ? (
+                  <MicOff className="size-4" />
+                ) : (
+                  <Mic className="size-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              {muted ? "Unmute" : "Mute"}
+            </TooltipContent>
+          </Tooltip>
 
-            <div className="flex flex-col truncate leading-tight text-left">
-              <span className="truncate text-sm font-semibold text-foreground group-hover:text-white transition-colors">
-                {currentUser.profile.display_name}
-              </span>
-              <span className="truncate text-xs text-muted-foreground">
-                @{currentUser.profile.username}
-              </span>
-            </div>
-          </button>
-        </PopoverTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer transition-colors",
+                  deafened && "text-destructive hover:text-destructive"
+                )}
+                onClick={() => setDeafened((d) => !d)}
+              >
+                {deafened ? (
+                  <HeadphoneOff className="size-4" />
+                ) : (
+                  <Headphones className="size-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              {deafened ? "Undeafen" : "Deafen"}
+            </TooltipContent>
+          </Tooltip>
 
-        <PopoverContent
-          align="start"
-          className="ml-0.5 w-72 p-0 overflow-hidden"
-        >
-          <MyUserProfileCard user={publicFromUser(currentUser)} />
-        </PopoverContent>
-      </Popover>
-
-      <div className="flex shrink-0 items-center gap-0.5 ml-1">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer transition-colors",
-                muted && "text-destructive hover:text-destructive"
-              )}
-              onClick={() => setMuted((m) => !m)}
-            >
-              {muted ? (
-                <MicOff className="size-4" />
-              ) : (
-                <Mic className="size-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            {muted ? "Unmute" : "Mute"}
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer transition-colors",
-                deafened && "text-destructive hover:text-destructive"
-              )}
-              onClick={() => setDeafened((d) => !d)}
-            >
-              {deafened ? (
-                <HeadphoneOff className="size-4" />
-              ) : (
-                <Headphones className="size-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            {deafened ? "Undeafen" : "Deafen"}
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer"
-              onClick={() => setSettingsDialogOpen(true)}
-            >
-              <Settings className="size-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">Settings</TooltipContent>
-        </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 text-muted-foreground hover:bg-white/10 hover:text-white cursor-pointer"
+                onClick={() => setSettingsDialogOpen(true)}
+              >
+                <Settings className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Settings</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     </ShadSidebarFooter>
   );

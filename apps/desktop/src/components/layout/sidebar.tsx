@@ -145,7 +145,7 @@ export function Sidebar({ setSettingsDialogOpen }: Props) {
     : [];
 
   return (
-    <ShadSidebar>
+    <ShadSidebar variant="inset">
       <DialogCreateGuild
         isOpen={createDialogOpen}
         setIsOpen={setCreateDialogOpen}

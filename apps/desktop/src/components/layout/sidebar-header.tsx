@@ -87,12 +87,12 @@ export function SidebarHeader({
 
   return (
     <>
-      <ShadSidebarHeader className="border-b border-black/20 p-0">
+      <ShadSidebarHeader className="border-b h-8 flex  border-black/20 p-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-12 w-full justify-between rounded-none px-3 text-white hover:bg-white/5 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="h-8 w-full justify-between rounded-none px-3 text-white hover:bg-white/5 focus-visible:ring-0 focus-visible:ring-offset-0"
             >
               <div className="flex items-center gap-2 min-w-0">
                 {!isHome && activeGuild && (

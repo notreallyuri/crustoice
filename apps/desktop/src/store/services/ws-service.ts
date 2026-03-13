@@ -61,7 +61,18 @@ export const createWebSocketService: StateCreator<
       set({ currentUser: { ...currentUser, presence } });
     }
   },
-  sendMessage(content) {}
+  sendMessage(channel_id, input) {
+    const content = input.trim();
+    const ws = get().ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(
+      JSON.stringify({
+        type: "Chat",
+        channel_id,
+        content
+      })
+    );
+  }
 });
 
 function handleServerMessage(

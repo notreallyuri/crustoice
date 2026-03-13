@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Hash } from "lucide-react";
 import { MessageGroup } from "@/components/message-group";
 import { groupMessages } from "@/lib/group-messages";
+import { formatTime } from "@/lib/utils";
 
 export const Route = createFileRoute("/g/$guildId/$channelId")({
   component: RouteComponent
@@ -19,8 +20,8 @@ function RouteComponent() {
   const EMPTY: ChatMessage[] = [];
   const messages = useAppStore((s) => s.messages[channelId] ?? EMPTY);
   const selectChannel = useAppStore((s) => s.selectChannel);
-  const ws = useAppStore((s) => s.ws);
   const userCache = useAppStore((s) => s.userCache);
+  const sendMessage = useAppStore((s) => s.sendMessage);
 
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -38,26 +39,25 @@ function RouteComponent() {
     bottomRef.current?.scrollIntoView({ behavior: "instant" });
   }, [messages]);
 
-  const sendMessage = () => {
-    const content = input.trim();
-    if (!content || !ws || ws.readyState !== WebSocket.OPEN) return;
-
-    ws.send(
-      JSON.stringify({
-        type: "Chat",
-        channel_id: channelId,
-        content
-      })
-    );
+  const handleMessage = () => {
+    sendMessage(channelId, input);
     setInput("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleMessage();
     }
   };
+
+  console.log("Rendering channel:", channelId, "with messages:", messages);
+  console.log(
+    "Rendering chat timers:",
+    messages.map((m) => {
+      return formatTime(m.created_at);
+    })
+  );
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -68,7 +68,7 @@ function RouteComponent() {
         </span>
       </div>
 
-      <ScrollArea className="flex-1 px-4">
+      <ScrollArea className="flex-1">
         <div className="flex flex-col gap-1 py-4">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full py-16 text-muted-foreground">
@@ -90,7 +90,7 @@ function RouteComponent() {
         </div>
       </ScrollArea>
 
-      <div className="px-4 pb-6 shrink-0">
+      <div className="px-4 pb-2 shrink-0">
         <div className="flex items-end gap-2 bg-muted px-4 py-2">
           <Textarea
             value={input}
@@ -101,7 +101,7 @@ function RouteComponent() {
             rows={1}
           />
         </div>
-        <p className="text-xs text-muted-foreground mt-1 px-1">
+        <p className="text-[10px] text-muted-foreground mt-1 px-1">
           Enter to send · Shift+Enter for new line
         </p>
       </div>

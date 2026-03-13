@@ -22,59 +22,79 @@ export function MessageGroup({
 
   return (
     <div
-      className="flex gap-3 px-2 py-0.5 w-full rounded group"
+      className="flex flex-col w-full group"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="relative">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Avatar className="size-9 mt-0.5 shrink-0 cursor-pointer">
-              <AvatarGif
-                animated={hovered}
-                src={avatarUrl ?? undefined}
-                alt=""
-              />
-              <AvatarFallback className="text-xs bg-primary/20 text-primary">
-                {displayName.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </PopoverTrigger>
-          <PopoverContent
-            side="right"
-            align="start"
-            className="w-72 p-0 overflow-hidden"
-          >
-            {author && <UserProfileCard user={author} />}
-          </PopoverContent>
-        </Popover>
-      </div>
+      <div className="flex gap-3 px-2 py-0.5 hover:bg-white/5 group/msg relative mt-3">
+        <div className="relative shrink-0 w-9">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Avatar className="size-9 mt-0.5 shrink-0 cursor-pointer">
+                <AvatarGif
+                  animated={hovered}
+                  src={avatarUrl ?? undefined}
+                  alt=""
+                />
+                <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                  {displayName.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </PopoverTrigger>
+            <PopoverContent
+              side="right"
+              align="start"
+              className="w-72 p-0 overflow-hidden"
+            >
+              {author && <UserProfileCard user={author} />}
+            </PopoverContent>
+          </Popover>
+        </div>
 
-      <div className="flex flex-col w-full gap-0.5 min-w-0">
-        <div className="hover:bg-white/5">
+        <div className="flex ml-2 flex-col min-w-0 w-full">
           <div className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold text-white truncate">
-              {displayName}
-            </span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <span className="text-sm font-semibold text-white truncate hover:underline cursor-pointer">
+                  {displayName}
+                </span>
+              </PopoverTrigger>
+              <PopoverContent
+                side="right"
+                align="start"
+                className="w-72 p-0 overflow-hidden"
+              >
+                {author && <UserProfileCard user={author} />}
+              </PopoverContent>
+            </Popover>
             <span className="text-xs text-muted-foreground shrink-0">
               {formatTime(first.created_at)}
             </span>
           </div>
-          <p className="text-sm text-[#dcddde]  wrap-break-words leading-relaxed">
+          <p className="text-sm text-[#dcddde] warp-break-words leading-relaxed">
             {first.content}
           </p>
         </div>
-        {messages.slice(1).map((msg) => (
-          <div key={msg.id} className="relative group/msg hover:bg-white/5">
-            <span className="absolute -left-14 top-1/2 -translate-y-1/2 text-xs text-muted-foreground opacity-0 group-hover/msg:opacity-100 transition-opacity">
+      </div>
+
+      {messages.slice(1).map((msg) => (
+        <div
+          key={msg.id}
+          className="flex gap-3 px-2 py-0.5 hover:bg-white/5 group/msg relative"
+        >
+          <div className="w-11 shrink-0 flex items-center justify-end">
+            <span className="text-[9px] text-muted-foreground opacity-0 group-hover/msg:opacity-100 transition-opacity select-none text-right">
               {formatTime(msg.created_at)}
             </span>
-            <p className="text-sm text-[#dcddde] wrap-break-words leading-relaxed">
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-[#dcddde] warp-break-words leading-relaxed">
               {msg.content}
             </p>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }

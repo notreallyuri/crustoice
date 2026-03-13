@@ -5,14 +5,21 @@ export function groupMessages(messages: ChatMessage[]): ChatMessage[][] {
   let current: ChatMessage[] = [];
 
   for (const msg of messages) {
-    const last = current[current.length - 1];
-    const timeDiff = last
-      ? Number(msg.created_at) - Number(last.created_at)
-      : 0;
-    const sameAuthor = last?.author_id === msg.author_id;
-    const withinWindow = timeDiff < 10 * 60 * 1000; // 10 minutes in ms
+    if (current.length === 0) {
+      current.push(msg);
+      continue;
+    }
 
-    if (current.length === 0 || (sameAuthor && withinWindow)) {
+    const last = current[current.length - 1];
+
+    const msgTime = new Date(msg.created_at).getTime();
+    const lastTime = new Date(last.created_at).getTime();
+
+    const timeDiff = msgTime - lastTime;
+    const sameAuthor = last.author_id === msg.author_id;
+    const withinWindow = timeDiff < 10 * 60 * 1000;
+
+    if (sameAuthor && withinWindow) {
       current.push(msg);
     } else {
       groups.push(current);
@@ -21,5 +28,6 @@ export function groupMessages(messages: ChatMessage[]): ChatMessage[][] {
   }
 
   if (current.length > 0) groups.push(current);
+
   return groups;
 }

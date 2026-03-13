@@ -67,7 +67,7 @@ export interface ChannelRepository {
 export interface WebSocketRepository {
   initWebSocket: () => Promise<void>;
   setPresence: (presence: UserPresence) => void;
-  sendMessage: (content: string) => void;
+  sendMessage: (channel_id: string, content: string) => void;
 }
 
 export type AppRepository = GuildRepository &

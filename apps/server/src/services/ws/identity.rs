@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::entities::guild_members;
 use crate::entities::prelude::*;
 use crate::services::{guilds::fetch::get_user_guilds, users::prelude::*};
