@@ -1,4 +1,5 @@
-import { CategoryId, GuildId } from "./ids";
+import { CategoryId } from "./ids";
+import { ChannelMode } from "./guild";
 
 export type RegisterPayload = {
   email: string;
@@ -12,11 +13,30 @@ export type LoginPayload = {
   password: string;
 };
 
-export type CreateChannelPayload = {
-  guildId: GuildId;
-  name: string;
-  categoryId: CategoryId | null;
-};
+export type CreateChannelPayload =
+  | {
+      kind: "text";
+      name: string;
+      category_id: CategoryId | null;
+      mode: ChannelMode;
+    }
+  | {
+      kind: "voice";
+      name: string;
+      category_id: CategoryId | null;
+      bitrate?: number;
+      user_limit?: number;
+    }
+  | {
+      kind: "docs";
+      name: string;
+      category_id: CategoryId | null;
+    }
+  | {
+      kind: "canvas";
+      name: string;
+      category_id: CategoryId | null;
+    };
 
 export type CreateGuilldPayload = {
   name: string;
@@ -29,16 +49,16 @@ export type UpdateProfilePayload = {
 };
 
 export type UpdateUsernamePayload = {
-  password: string;
-  username: string;
+  current_password: string;
+  new_username: string;
 };
 
 export type UpdateEmailPayload = {
-  password: string;
-  email: string;
+  current_password: string;
+  new_email: string;
 };
 
 export type UpdatePasswordPayload = {
-  password: string;
+  current_password: string;
   new_password: string;
 };

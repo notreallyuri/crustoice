@@ -1,5 +1,5 @@
 use super::{
-    channel::{ChannelCategory, MessageChannel},
+    channel::prelude::{Channel, ChannelCategory},
     ids::{ChannelId, GuildId, UserId},
     user::UserPublic,
 };
@@ -9,7 +9,6 @@ use serde::{Deserialize, Serialize};
 pub struct GuildMember {
     pub guild_id: GuildId,
     pub user_id: UserId,
-    pub nickname: Option<String>,
     pub roles: Vec<String>,
     pub joined_at: String,
     pub data: UserPublic,
@@ -34,5 +33,5 @@ pub struct Guild {
     pub default_channel_id: Option<ChannelId>,
     pub members: Vec<GuildMember>,
     pub categories: Vec<ChannelCategory>,
-    pub channels: Vec<MessageChannel>,
+    pub channels: Vec<Channel>,
 }

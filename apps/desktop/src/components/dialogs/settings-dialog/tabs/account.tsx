@@ -15,10 +15,10 @@ export function AccountSettings() {
           <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
             Identity & Login
           </h2>
-          <div className="rounded-none border border-white/10 bg-black/20 overflow-hidden">
+          <div className="border rounded border-white/10 bg-black/20 overflow-hidden">
             <div className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
               <div className="flex items-center gap-4">
-                <div className="p-2 bg-white/5 border border-white/10 rounded-none text-muted-foreground">
+                <div className="p-2 bg-white/5 border rounded border-white/10 text-muted-foreground">
                   <UserSquare2 className="size-4" />
                 </div>
                 <div>
@@ -30,21 +30,16 @@ export function AccountSettings() {
                   </p>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-none border-white/10"
-              >
+              <Button variant="outline" size="sm">
                 Change
               </Button>
             </div>
 
             <Separator className="bg-white/10" />
 
-            {/* Row: Email */}
             <div className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
               <div className="flex items-center gap-4">
-                <div className="p-2 bg-white/5 border border-white/10 rounded-none text-muted-foreground">
+                <div className="p-2 bg-white/5 border border-white/10 rounded text-muted-foreground">
                   <Mail className="size-4" />
                 </div>
                 <div>
@@ -66,15 +61,10 @@ export function AccountSettings() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setRevealEmail((prev) => !prev)}
-                  className="rounded-none text-xs"
                 >
                   {revealEmail ? "Hide" : "Reveal"}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-none border-white/10"
-                >
+                <Button variant="outline" size="sm">
                   Update
                 </Button>
               </div>
@@ -82,10 +72,9 @@ export function AccountSettings() {
 
             <Separator className="bg-white/10" />
 
-            {/* Row: Password */}
             <div className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
               <div className="flex items-center gap-4">
-                <div className="p-2 bg-white/5 border border-white/10 rounded-none text-muted-foreground">
+                <div className="p-2 bg-white/5 border border-white/10 rounded text-muted-foreground">
                   <KeyRound className="size-4" />
                 </div>
                 <div>
@@ -97,11 +86,7 @@ export function AccountSettings() {
                   </p>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-none border-white/10"
-              >
+              <Button variant="outline" size="sm">
                 Update Password
               </Button>
             </div>
@@ -116,7 +101,7 @@ export function AccountSettings() {
             Danger Zone
           </h2>
 
-          <div className="rounded-none border border-destructive/20 bg-destructive/5 overflow-hidden">
+          <div className="border rounded border-destructive/20 bg-destructive/5 overflow-hidden">
             <div className="flex items-center justify-between p-4">
               <div>
                 <p className="text-sm font-medium text-foreground">
@@ -127,12 +112,7 @@ export function AccountSettings() {
                   time by logging back in.
                 </p>
               </div>
-              <Button
-                variant="outline"
-                className="rounded-none border-white/10 hover:bg-white/10 shrink-0 ml-4"
-              >
-                Disable
-              </Button>
+              <Button variant="outline">Disable</Button>
             </div>
 
             <Separator className="bg-destructive/20" />
@@ -147,12 +127,7 @@ export function AccountSettings() {
                   action cannot be undone.
                 </p>
               </div>
-              <Button
-                variant="destructive"
-                className="rounded-none shrink-0 ml-4"
-              >
-                Delete Account
-              </Button>
+              <Button variant="destructive">Delete Account</Button>
             </div>
           </div>
         </div>

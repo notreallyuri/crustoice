@@ -12,8 +12,8 @@ use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter,
 };
 use shared::{
-    http::requests::CreateChannelRequest,
-    structures::prelude::{ChannelId, GuildId, MessageChannel},
+    http::prelude::CreateChannelRequest,
+    structures::prelude::{CategoryId, Channel, ChannelId, GuildId, TextChannel, VoiceChannel},
 };
 use uuid::Uuid;
 
@@ -35,31 +35,87 @@ pub async fn create_channel(
         .filter(channels::Column::GuildId.eq(guild_id.0.clone()))
         .count(&state.db)
         .await
-        .unwrap_or(0);
+        .unwrap_or(0) as i32;
 
     let new_channel_id = Uuid::new_v4().to_string();
-    let category_id_str = payload.category_id.as_ref().map(|c| c.0.clone());
 
-    let new_channel = channels::ActiveModel {
-        id: Set(new_channel_id.clone()),
-        guild_id: Set(guild_id.0.clone()),
-        name: Set(payload.name.clone()),
-        position: Set(channel_count as i32),
-        category_id: Set(category_id_str),
-    };
+    let response = match payload {
+        CreateChannelRequest::Text {
+            name,
+            category_id,
+            mode,
+        } => {
+            let category_id_str = category_id.as_ref().map(|c| c.0.clone());
 
-    let inserted_channel = new_channel
-        .insert(&state.db)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+            channels::ActiveModel {
+                id: Set(new_channel_id.clone()),
+                guild_id: Set(guild_id.0.clone()),
+                name: Set(name.clone()),
+                position: Set(channel_count),
+                category_id: Set(category_id_str.clone()),
+                kind: Set("text".to_string()),
+                mode: Set(Some(mode.as_str().to_string())),
+                bitrate: Set(None),
+                user_limit: Set(None),
+            }
+            .insert(&state.db)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    let response = MessageChannel {
-        id: ChannelId(inserted_channel.id),
-        guild_id: GuildId(inserted_channel.guild_id),
-        name: inserted_channel.name,
-        position: inserted_channel.position,
-        category_id: payload.category_id,
-        history: vec![],
+            Channel::Text(TextChannel {
+                id: ChannelId(new_channel_id),
+                guild_id: guild_id.clone(),
+                category_id: category_id_str.map(CategoryId),
+                name,
+                position: channel_count,
+                mode,
+                pins: vec![],
+                history: vec![],
+            })
+        }
+
+        CreateChannelRequest::Voice {
+            name,
+            category_id,
+            bitrate,
+            user_limit,
+        } => {
+            let category_id_str = category_id.as_ref().map(|c| c.0.clone());
+            let resolved_bitrate = bitrate.unwrap_or(64_000);
+
+            channels::ActiveModel {
+                id: Set(new_channel_id.clone()),
+                guild_id: Set(guild_id.0.clone()),
+                name: Set(name.clone()),
+                position: Set(channel_count),
+                category_id: Set(category_id_str.clone()),
+                kind: Set("voice".to_string()),
+                mode: Set(None),
+                bitrate: Set(Some(resolved_bitrate)),
+                user_limit: Set(user_limit),
+            }
+            .insert(&state.db)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            Channel::Voice(VoiceChannel {
+                id: ChannelId(new_channel_id),
+                guild_id: guild_id.clone(),
+                category_id: category_id_str.map(CategoryId),
+                name,
+                position: channel_count,
+                bitrate: resolved_bitrate,
+                user_limit,
+                participants: vec![],
+            })
+        }
+
+        _ => {
+            return Err((
+                StatusCode::NOT_IMPLEMENTED,
+                "Channel type not yet supported".to_string(),
+            ));
+        }
     };
 
     Ok((StatusCode::CREATED, Json(response)))

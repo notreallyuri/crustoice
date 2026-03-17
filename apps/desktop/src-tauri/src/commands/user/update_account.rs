@@ -1,5 +1,5 @@
 use crate::{client_state::ClientState, structures::error::AppError, API_URL};
-use shared::http::requests::{ChangePasswordRequest, UpdateEmailRequest, UpdateUsernameRequest};
+use shared::http::prelude::{ChangePasswordRequest, UpdateEmailRequest, UpdateUsernameRequest};
 use tauri::State;
 
 #[tauri::command]

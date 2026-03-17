@@ -1,7 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useAppStore } from "@/store/app-store";
 import { useEffect, useRef, useState } from "react";
-import { ChatMessage, Guild, MessageChannel } from "@/types";
+import { Message, Guild, Channel } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Hash } from "lucide-react";
@@ -17,7 +17,7 @@ function RouteComponent() {
   const { guildId, channelId } = useParams({ from: "/g/$guildId/$channelId" });
 
   const guilds = useAppStore((s) => s.guilds);
-  const EMPTY: ChatMessage[] = [];
+  const EMPTY: Message[] = [];
   const messages = useAppStore((s) => s.messages[channelId] ?? EMPTY);
   const selectChannel = useAppStore((s) => s.selectChannel);
   const userCache = useAppStore((s) => s.userCache);
@@ -27,9 +27,7 @@ function RouteComponent() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const guild = guilds.find((g: Guild) => g.id === guildId);
-  const channel = guild?.channels.find(
-    (c: MessageChannel) => c.id === channelId
-  );
+  const channel = guild?.channels.find((c: Channel) => c.id === channelId);
 
   useEffect(() => {
     selectChannel(guildId, channelId);
@@ -91,7 +89,7 @@ function RouteComponent() {
       </ScrollArea>
 
       <div className="px-4 pb-2 shrink-0">
-        <div className="flex items-end gap-2 bg-muted px-4 py-2">
+        <div className="flex items-end rounded gap-2 bg-muted px-4 py-2">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}

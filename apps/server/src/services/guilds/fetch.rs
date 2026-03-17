@@ -39,7 +39,6 @@ pub async fn get_user_guilds(state: &SharedState, user_id: &UserId) -> Result<Ve
             members.push(GuildMember {
                 guild_id: GuildId(m.guild_id),
                 user_id: UserId(m.user_id),
-                nickname: m.nickname,
                 roles: m
                     .roles
                     .and_then(|j| serde_json::from_value(j).ok())
@@ -88,15 +87,33 @@ pub async fn get_user_guilds(state: &SharedState, user_id: &UserId) -> Result<Ve
             .all(&state.db)
             .await?;
 
-        let channels: Vec<MessageChannel> = channel_models
+        let channels: Vec<Channel> = channel_models
             .into_iter()
-            .map(|c| MessageChannel {
-                id: ChannelId(c.id),
-                guild_id: GuildId(c.guild_id),
-                category_id: c.category_id.map(CategoryId),
-                name: c.name,
-                position: c.position,
-                history: vec![],
+            .map(|c| match c.kind.as_str() {
+                "voice" => Channel::Voice(VoiceChannel {
+                    id: ChannelId(c.id),
+                    guild_id: GuildId(c.guild_id),
+                    category_id: c.category_id.map(CategoryId),
+                    name: c.name,
+                    position: c.position,
+                    user_limit: c.user_limit,
+                    bitrate: c.bitrate.unwrap_or(64_000),
+                    participants: vec![],
+                }),
+                _ => Channel::Text(TextChannel {
+                    id: ChannelId(c.id),
+                    guild_id: GuildId(c.guild_id),
+                    category_id: c.category_id.map(CategoryId),
+                    name: c.name,
+                    position: c.position,
+                    mode: match c.mode.as_deref() {
+                        Some("board") => ChannelMode::Board,
+                        Some("threads") => ChannelMode::Threads,
+                        _ => ChannelMode::Chat,
+                    },
+                    pins: vec![],
+                    history: vec![],
+                }),
             })
             .collect();
 

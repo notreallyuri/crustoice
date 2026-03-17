@@ -1,3 +1,4 @@
+use super::presence;
 use crate::entities::guild_members;
 use crate::entities::prelude::*;
 use crate::services::{guilds::fetch::get_user_guilds, users::prelude::*};
@@ -9,8 +10,6 @@ use shared::{
         GuildId, Status, User, UserAccount, UserId, UserPresence, UserProfile, UserPublic,
     },
 };
-
-use super::presence;
 
 pub async fn handle_identify(
     state: &SharedState,

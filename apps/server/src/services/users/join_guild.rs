@@ -6,7 +6,7 @@ use crate::{
 use axum::{Json, extract::State, http::StatusCode};
 use sea_orm::{ActiveModelTrait, EntityTrait, Set, TransactionTrait};
 use shared::{
-    http::requests::JoinGuildRequest,
+    http::requests::prelude::JoinGuildRequest,
     protocol::ServerMessage,
     structures::ids::{GuildId, UserId},
 };
@@ -47,7 +47,6 @@ pub async fn join_guild(
     let new_member = guild_members::ActiveModel {
         guild_id: Set(invite.guild_id.clone()),
         user_id: Set(user_id.clone()),
-        nickname: Set(None),
         roles: Set(Some(serde_json::json!([]))),
         joined_at: Set(now),
         identity_enabled: Set(identity_enabled),

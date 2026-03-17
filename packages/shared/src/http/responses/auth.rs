@@ -7,10 +7,3 @@ pub struct AuthResponse {
     pub username: String,
     pub token: String,
 }
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct InviteResponse {
-    pub invite_code: String,
-    pub guild_id: String,
-    pub expires_at: Option<String>,
-}

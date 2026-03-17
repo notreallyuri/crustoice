@@ -1,16 +1,15 @@
-import { ChatMessage } from "@/types";
+import { Message } from "@/types";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { AvatarGif } from "./avatar-gif";
 import { formatTime } from "@/lib/utils";
 import { UserProfileCard } from "./layout/profile-card";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { useState } from "react";
 
 export function MessageGroup({
   messages,
   userCache
 }: {
-  messages: ChatMessage[];
+  messages: Message[];
   userCache: Record<string, any>;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -28,45 +27,27 @@ export function MessageGroup({
     >
       <div className="flex gap-3 px-2 py-0.5 hover:bg-white/5 group/msg relative mt-3">
         <div className="relative shrink-0 w-9">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Avatar className="size-9 mt-0.5 shrink-0 cursor-pointer">
-                <AvatarGif
-                  animated={hovered}
-                  src={avatarUrl ?? undefined}
-                  alt=""
-                />
-                <AvatarFallback className="text-xs bg-primary/20 text-primary">
-                  {displayName.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </PopoverTrigger>
-            <PopoverContent
-              side="right"
-              align="start"
-              className="w-72 p-0 overflow-hidden"
-            >
-              {author && <UserProfileCard user={author} />}
-            </PopoverContent>
-          </Popover>
+          <UserProfileCard align="start" side="right" user={author}>
+            <Avatar className="size-9 mt-0.5 shrink-0 cursor-pointer">
+              <AvatarGif
+                animated={hovered}
+                src={avatarUrl ?? undefined}
+                alt=""
+              />
+              <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                {displayName.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </UserProfileCard>
         </div>
 
         <div className="flex ml-2 flex-col min-w-0 w-full">
           <div className="flex items-baseline gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <span className="text-sm font-semibold text-white truncate hover:underline cursor-pointer">
-                  {displayName}
-                </span>
-              </PopoverTrigger>
-              <PopoverContent
-                side="right"
-                align="start"
-                className="w-72 p-0 overflow-hidden"
-              >
-                {author && <UserProfileCard user={author} />}
-              </PopoverContent>
-            </Popover>
+            <UserProfileCard align="start" side="right" user={author}>
+              <span className="text-sm font-semibold text-white truncate hover:underline cursor-pointer">
+                {displayName}
+              </span>
+            </UserProfileCard>
             <span className="text-xs text-muted-foreground shrink-0">
               {formatTime(first.created_at)}
             </span>

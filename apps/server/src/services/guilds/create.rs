@@ -3,9 +3,10 @@ use crate::extractors::auth::AuthedUser;
 use crate::{entities::guild_members, state::SharedState};
 use axum::{Json, extract::State, http::StatusCode};
 use sea_orm::{ActiveModelTrait, Set, TransactionTrait};
+use shared::structures::prelude::{Channel, ChannelMode, VoiceChannel};
 use shared::{
-    http::requests::CreateGuildRequest,
-    structures::prelude::{ChannelId, Guild, GuildId, MessageChannel, UserId},
+    http::requests::prelude::CreateGuildRequest,
+    structures::prelude::{ChannelId, Guild, GuildId, TextChannel, UserId},
 };
 use uuid::Uuid;
 
@@ -30,7 +31,6 @@ pub async fn create_guild(
     let new_member = guild_members::ActiveModel {
         guild_id: Set(guild_id.clone()),
         user_id: Set(user_id.clone()),
-        nickname: Set(None),
         roles: Set(Some(serde_json::json!(["owner"]))),
         joined_at: Set(now),
         identity_enabled: Set(false),
@@ -40,12 +40,28 @@ pub async fn create_guild(
         identity_show_global_username: Set(true),
     };
 
-    let new_channel = channels::ActiveModel {
+    let new_text_channel = channels::ActiveModel {
         id: Set(channel_id.clone()),
         guild_id: Set(guild_id.clone()),
         name: Set("general".to_string()),
         position: Set(0),
         category_id: Set(None),
+        kind: Set("text".to_string()),
+        mode: Set(Some("chat".to_string())),
+        bitrate: Set(None),
+        user_limit: Set(None),
+    };
+
+    let new_voice_channel = channels::ActiveModel {
+        id: Set(Uuid::new_v4().to_string()),
+        guild_id: Set(guild_id.clone()),
+        name: Set("General".to_string()),
+        position: Set(1),
+        category_id: Set(None),
+        kind: Set("voice".to_string()),
+        mode: Set(None),
+        bitrate: Set(Some(64000)),
+        user_limit: Set(None),
     };
 
     let txn = state
@@ -64,7 +80,12 @@ pub async fn create_guild(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    let inserted_channel = new_channel
+    let inserted_text_channel = new_text_channel
+        .insert(&txn)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let inserted_voice_channel = new_voice_channel
         .insert(&txn)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -81,13 +102,26 @@ pub async fn create_guild(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    let general_channel = MessageChannel {
-        id: ChannelId(inserted_channel.id),
-        guild_id: GuildId(inserted_channel.guild_id),
+    let general_text_channel = TextChannel {
+        id: ChannelId(inserted_text_channel.id),
+        guild_id: GuildId(inserted_text_channel.guild_id),
         category_id: None,
-        name: inserted_channel.name,
-        position: inserted_channel.position,
+        name: inserted_text_channel.name,
+        position: inserted_text_channel.position,
+        mode: ChannelMode::default(),
         history: Vec::new(),
+        pins: Vec::new(),
+    };
+
+    let general_voice_channel = VoiceChannel {
+        id: ChannelId(inserted_voice_channel.id),
+        guild_id: GuildId(inserted_voice_channel.guild_id),
+        category_id: None,
+        name: inserted_voice_channel.name,
+        position: inserted_voice_channel.position,
+        bitrate: inserted_voice_channel.bitrate.unwrap_or(64000),
+        user_limit: inserted_voice_channel.user_limit,
+        participants: vec![],
     };
 
     let guild_response = Guild {
@@ -97,9 +131,12 @@ pub async fn create_guild(
         icon_url: None,
         banner_url: None,
         members: Vec::new(),
-        default_channel_id: Some(general_channel.id.clone()),
+        default_channel_id: Some(general_text_channel.id.clone()),
         categories: Vec::new(),
-        channels: vec![general_channel],
+        channels: vec![
+            Channel::Text(general_text_channel),
+            Channel::Voice(general_voice_channel),
+        ],
     };
 
     Ok((StatusCode::CREATED, Json(guild_response)))

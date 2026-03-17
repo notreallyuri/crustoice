@@ -12,6 +12,10 @@ pub struct Model {
     pub name: String,
     pub position: i32,
     pub category_id: Option<String>,
+    pub kind: String,
+    pub mode: Option<String>,
+    pub user_limit: Option<i32>,
+    pub bitrate: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -1,22 +1,26 @@
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "../ui/dialog";
-import { Input } from "../ui/input";
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useForm } from "@tanstack/react-form";
 import z from "zod";
-import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel
+} from "@/components/ui/field";
 import { useAppStore } from "@/store/app-store";
 import { Camera, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { DialogCropper } from "./dialog-cropper";
+import { DialogCropper } from "@/components/dialogs/dialog-cropper";
 import { useImageSelection } from "@/hooks/use-image-selection";
-import { CropResult } from "../kibo-ui/image-crop";
+import { CropResult } from "@/components/kibo-ui/image-crop";
 
 type Props = {
   isOpen: boolean;
@@ -91,7 +95,6 @@ export function DialogCreateGuild({ isOpen, setIsOpen }: Props) {
           setIsOpen(v);
         }}
       >
-        <DialogTrigger asChild></DialogTrigger>
         <DialogContent className="dark text-foreground">
           <DialogHeader>
             <DialogTitle>Create Guild</DialogTitle>

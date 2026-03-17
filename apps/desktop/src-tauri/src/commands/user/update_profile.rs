@@ -7,7 +7,7 @@ use crate::{
     },
     API_URL,
 };
-use shared::http::requests::UpdateProfileRequest;
+use shared::http::prelude::UpdateProfileRequest;
 use tauri::State;
 
 #[tauri::command]

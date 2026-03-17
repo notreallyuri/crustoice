@@ -60,6 +60,7 @@ pub fn run() {
             user::prelude::change_password,
             guild::prelude::create_guild,
             channel::prelude::get_channel_history,
+            channel::prelude::create_channel
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

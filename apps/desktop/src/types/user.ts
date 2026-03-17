@@ -10,7 +10,7 @@ export type PresenceStatus =
 export type PresenceTimer =
   | "Elapsed"
   | { Countdown: { seconds: number } }
-  | "None";
+  | "Off";
 
 export type PresenceKind = "Fixed" | { AppLinked: { process_name: string } };
 
@@ -35,7 +35,12 @@ export type UIDarkMode = "system" | "light" | "dark";
 export type UITheme = "default" | "strawberry" | "blueberry";
 export type Locale = "en-US" | "pt-BR";
 export type ActivityKind = "playing" | "streaming" | "listening" | "watching";
-export type RelationshipStatus = "";
+export type RelationshipStatus =
+  | "None"
+  | "Friend"
+  | "Blocked"
+  | "PendingIncoming"
+  | "PendingOutcoming";
 
 export interface User {
   id: UserId;
@@ -80,8 +85,8 @@ export interface UserSettings {
 }
 
 export interface UserRelationship {
-  user_id: UserId;
-  user: UserProfile;
+  id: UserId;
+  user: UserPublic;
   status: RelationshipStatus;
   since: string;
 }

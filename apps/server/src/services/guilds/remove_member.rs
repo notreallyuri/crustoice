@@ -11,7 +11,7 @@ pub use axum::{
 };
 use sea_orm::{ColumnTrait, EntityTrait, ExprTrait, QueryFilter};
 pub use shared::{
-    http::requests::RemoveGuildMemberRequest,
+    http::requests::prelude::RemoveGuildMemberRequest,
     structures::ids::{GuildId, UserId},
 };
 

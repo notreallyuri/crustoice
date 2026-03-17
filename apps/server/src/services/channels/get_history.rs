@@ -25,8 +25,6 @@ pub async fn get_channel_history(
         )
     })?;
 
-    // 99808-1179
-
     let rows = if let Some(before_ms) = query.before {
         state
             .scylla
@@ -82,6 +80,7 @@ pub async fn get_channel_history(
                 edited_at: edited_at_ms.and_then(|ts| {
                     chrono::DateTime::from_timestamp_millis(ts.0).map(|dt| dt.to_rfc3339())
                 }),
+                thread_id: None,
             },
         )
         .collect();

@@ -10,55 +10,57 @@ import {
   SidebarMenuItem
 } from "@/components/ui/sidebar";
 import { SidebarFooter } from "./sidebar-footer";
-import { SidebarHeader } from "./sidebar-header";
+import { SidebarHeader, Tab } from "./sidebar-header";
 import { ChevronDown, Hash, MessageSquareDashed, Users } from "lucide-react";
 import { useState } from "react";
-import { DialogCreateGuild } from "../dialogs/dialog-create-guild";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { MessageChannel, ChannelCategory } from "@/types";
+import { Channel, ChannelCategory, Guild } from "@/types";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarBadge, AvatarFallback } from "../ui/avatar";
+import { AvatarGif } from "../avatar-gif";
+import { UserProfileCard } from "./profile-card";
 
 type Props = {
   setSettingsDialogOpen: (open: boolean) => void;
 };
 
-type CategoryGroup = ChannelCategory & { channels: MessageChannel[] };
+type CategoryGroup = ChannelCategory & { channels: Channel[] };
 
 function ChannelItem({
   channel,
   guildId,
   isActive
 }: {
-  channel: MessageChannel;
+  channel: Channel;
   guildId: string;
   isActive: boolean;
 }) {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        asChild
         isActive={isActive}
         className={cn(
           "group/channel text-muted-foreground hover:bg-white/5 hover:text-white transition-colors",
           isActive && "bg-white/10 text-white"
         )}
-      >
-        <Link
-          to="/g/$guildId/$channelId"
-          params={{ guildId, channelId: channel.id }}
-          className="w-full"
-        >
-          <Hash
-            className={cn(
-              "size-4 shrink-0 transition-colors",
-              isActive
-                ? "text-white opacity-80"
-                : "opacity-40 group-hover/channel:opacity-60"
-            )}
-          />
-          <span className="truncate font-medium">{channel.name}</span>
-        </Link>
-      </SidebarMenuButton>
+        render={
+          <Link
+            to="/g/$guildId/$channelId"
+            params={{ guildId, channelId: channel.id }}
+            className="w-full"
+          >
+            <Hash
+              className={cn(
+                "size-4 shrink-0 transition-colors",
+                isActive
+                  ? "text-white opacity-80"
+                  : "opacity-40 group-hover/channel:opacity-60"
+              )}
+            />
+            <span className="truncate font-medium">{channel.name}</span>
+          </Link>
+        }
+      />
     </SidebarMenuItem>
   );
 }
@@ -115,7 +117,7 @@ function CategoryGroup({
 }
 
 export function Sidebar({ setSettingsDialogOpen }: Props) {
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("channels");
 
   const currentUser = useCurrentUser();
   const guilds = useAppStore((s) => s.guilds);
@@ -138,27 +140,24 @@ export function Sidebar({ setSettingsDialogOpen }: Props) {
         }))
     : [];
 
-  const uncategorized: MessageChannel[] = activeGuild
+  const uncategorized: Channel[] = activeGuild
     ? activeGuild.channels
         .filter((ch) => ch.category_id === null)
         .sort((a, b) => a.position - b.position)
     : [];
 
   return (
-    <ShadSidebar variant="inset">
-      <DialogCreateGuild
-        isOpen={createDialogOpen}
-        setIsOpen={setCreateDialogOpen}
-      />
+    <ShadSidebar className="pt-0" variant="inset">
       <SidebarHeader
         activeGuild={activeGuild}
         guilds={guilds}
         isHome={isHome}
-        setCreateDialogOpen={setCreateDialogOpen}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
 
-      <SidebarContent className="px-1">
-        <SidebarGroup className="p-0">
+      <SidebarContent>
+        <SidebarGroup>
           <SidebarGroupContent>
             {isHome ? (
               <SidebarMenu>
@@ -170,41 +169,16 @@ export function Sidebar({ setSettingsDialogOpen }: Props) {
                 </SidebarMenuItem>
               </SidebarMenu>
             ) : activeGuild ? (
-              <div className="space-y-0.5">
-                {/* Uncategorized channels */}
-                {uncategorized.length > 0 && (
-                  <SidebarMenu>
-                    {uncategorized.map((channel) => (
-                      <ChannelItem
-                        key={channel.id}
-                        channel={channel}
-                        guildId={activeGuild.id}
-                        isActive={channel.id === params.channelId}
-                      />
-                    ))}
-                  </SidebarMenu>
-                )}
-
-                {/* Categorized channels */}
-                {categorized.map((category) => (
-                  <CategoryGroup
-                    key={category.id}
-                    category={category}
-                    guildId={activeGuild.id}
-                    activeChannelId={params.channelId}
-                  />
-                ))}
-
-                {/* Empty guild */}
-                {uncategorized.length === 0 && categorized.length === 0 && (
-                  <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
-                    <MessageSquareDashed className="size-8 text-muted-foreground/30" />
-                    <p className="text-xs text-muted-foreground/50">
-                      No channels yet
-                    </p>
-                  </div>
-                )}
-              </div>
+              activeTab === "members" ? (
+                <MemberList members={activeGuild.members} />
+              ) : (
+                <ChannelList
+                  uncategorized={uncategorized}
+                  categorized={categorized}
+                  activeGuild={activeGuild}
+                  activeChannelId={params.channelId}
+                />
+              )
             ) : null}
           </SidebarGroupContent>
         </SidebarGroup>
@@ -215,5 +189,120 @@ export function Sidebar({ setSettingsDialogOpen }: Props) {
         currentUser={currentUser}
       />
     </ShadSidebar>
+  );
+}
+
+function ChannelList({
+  uncategorized,
+  categorized,
+  activeGuild,
+  activeChannelId
+}: {
+  uncategorized: Channel[];
+  categorized: CategoryGroup[];
+  activeGuild: Guild;
+  activeChannelId?: string;
+}) {
+  if (uncategorized.length === 0 && categorized.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+        <MessageSquareDashed className="size-8 text-muted-foreground/30" />
+        <p className="text-xs text-muted-foreground/50">No channels yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-0.5">
+      {uncategorized.length > 0 && (
+        <SidebarMenu>
+          {uncategorized.map((channel) => (
+            <ChannelItem
+              key={channel.id}
+              channel={channel}
+              guildId={activeGuild.id}
+              isActive={channel.id === activeChannelId}
+            />
+          ))}
+        </SidebarMenu>
+      )}
+      {categorized.map((category) => (
+        <CategoryGroup
+          key={category.id}
+          category={category}
+          guildId={activeGuild.id}
+          activeChannelId={activeChannelId}
+        />
+      ))}
+    </div>
+  );
+}
+
+function MemberList({ members }: { members: Guild["members"] }) {
+  const online = members.filter(
+    (m) =>
+      m.data.presence.status !== "Offline" &&
+      m.data.presence.status !== "Invisible"
+  );
+  const offline = members.filter(
+    (m) =>
+      m.data.presence.status === "Offline" ||
+      m.data.presence.status === "Invisible"
+  );
+
+  return (
+    <div className="space-y-3">
+      <MemberGroup label={`Online — ${online.length}`} members={online} />
+      {offline.length > 0 && (
+        <MemberGroup label={`Offline — ${offline.length}`} members={offline} />
+      )}
+    </div>
+  );
+}
+
+function MemberGroup({
+  label,
+  members
+}: {
+  label: string;
+  members: Guild["members"];
+}) {
+  return (
+    <div>
+      <p className="text-sm mb-1.5 font-bold uppercase tracking-wider text-muted-foreground/50">
+        {label}
+      </p>
+      {members.map((member) => (
+        <UserProfileCard user={member.data} side="right" align="start">
+          <button
+            key={member.user_id}
+            className="flex w-full items-center gap-2 cursor-pointer px-2 py-1 rounded-md hover:bg-white/5 transition-colors"
+            type="button"
+          >
+            <div className="relative shrink-0">
+              <Avatar className="size-6">
+                {member.data.avatar_url && (
+                  <AvatarGif src={member.data.avatar_url} alt="" />
+                )}
+                <AvatarFallback className="text-[10px]">
+                  {member.data.display_name.charAt(0)}
+                </AvatarFallback>
+                <AvatarBadge status={member.data.presence.status} />
+              </Avatar>
+            </div>
+            <span
+              className={cn(
+                "truncate text-sm font-medium",
+                member.data.presence.status === "Offline"
+                  ? "text-muted-foreground/50"
+                  : "text-muted-foreground"
+              )}
+            >
+              {member.data.display_name}
+            </span>
+          </button>
+        </UserProfileCard>
+      ))}
+    </div>
   );
 }

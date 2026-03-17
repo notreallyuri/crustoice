@@ -6,7 +6,7 @@ use crate::{
 };
 use axum::{Json, extract::State, http::StatusCode};
 use sea_orm::{ActiveModelTrait, EntityTrait, Set};
-use shared::http::requests::{
+use shared::http::requests::prelude::{
     ChangePasswordRequest, UpdateEmailRequest, UpdateProfileRequest, UpdateUsernameRequest,
 };
 

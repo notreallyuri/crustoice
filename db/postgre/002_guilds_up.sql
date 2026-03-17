@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS guilds (
 CREATE TABLE IF NOT EXISTS guild_members (
   guild_id TEXT NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  nickname TEXT,
   roles JSONB NOT NULL DEFAULT '[]',
   joined_at TIMESTAMPTZ NOT NULL,
 
@@ -36,7 +35,10 @@ CREATE TABLE IF NOT EXISTS channels (
   category_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   position INTEGER NOT NULL,
-  mode TEXT NOT NULL DEFAULT 'chat'
+  kind TEXT NOT NULL DEFAULT 'text',
+  mode TEXT,
+  user_limit INTEGER,
+  bitrate INTEGER DEFAULT 64000
 );
 
 CREATE TABLE IF NOT EXISTS invites (

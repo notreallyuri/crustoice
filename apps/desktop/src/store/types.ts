@@ -1,7 +1,7 @@
 import { CropResult } from "@/components/kibo-ui/image-crop";
 import {
   ChannelId,
-  ChatMessage,
+  Message,
   Guild,
   GuildId,
   User,
@@ -42,13 +42,11 @@ export interface AuthRepository {
 }
 
 export interface UserRepository {
-  sendMessage: (content: string) => Promise<void>;
   fetchUser: (userId: UserId) => Promise<void>;
   getMe: () => Promise<void>;
   getGuilds: () => Promise<void>;
   leaveGuild: (guildId: GuildId) => Promise<void>;
 
-  // Update Methods
   updateProfile: (
     payload: UpdateProfilePayload,
     crop?: CropResult
@@ -79,7 +77,7 @@ export type AppRepository = GuildRepository &
 export interface AppState {
   currentUser: User | null;
   guilds: Guild[];
-  messages: Record<ChannelId, ChatMessage[]>;
+  messages: Record<ChannelId, Message[]>;
   userCache: Record<UserId, UserPublic>;
   activeChannelId: ChannelId | null;
   activeGuildId: GuildId | null;

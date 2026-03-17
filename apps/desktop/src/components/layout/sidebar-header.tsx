@@ -1,278 +1,210 @@
+import { useState } from "react";
 import {
   ChevronDown,
   Cog,
+  Hash,
   Home,
-  Plus,
   LogOut,
-  MoreHorizontal
+  Plus,
+  Users,
+  Mail
 } from "lucide-react";
 import { Button } from "../ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "../ui/dropdown-menu";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuTrigger
-} from "../ui/context-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "../ui/alert-dialog";
-import { Link, useNavigate } from "@tanstack/react-router";
 import { Guild } from "@/types";
 import { SidebarHeader as ShadSidebarHeader } from "@/components/ui/sidebar";
-import { AvatarFallback, Avatar, AvatarImage } from "../ui/avatar";
-import { useAppStore } from "@/store/app-store";
-import { useState } from "react";
-import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { cn } from "@/lib/utils";
+import { LeaveGuildDialog } from "./sidebar-header-parts/dialog-leave-guild";
+import { HeaderDropdownMenu } from "./sidebar-header-parts/dropdown-menu";
+import { DialogCreateMenu } from "../dialogs/create-menu/dialog-main";
+import { DialogCreateGuild } from "../dialogs/dialog-create-guild";
+import { DialogCreateChannel } from "../dialogs/create-menu/dialog-create-channel";
+
+export type Tab = "channels" | "members";
+export type CreateDialogOptions = "menu" | "channel" | "event" | null;
 
 type Props = {
   guilds: Guild[];
   activeGuild: Guild | undefined;
   isHome: boolean;
-  setCreateDialogOpen: (v: boolean) => void;
+  activeTab: Tab;
+  setActiveTab: (tab: Tab) => void;
 };
-
-type GuildActionTarget = Guild | null;
 
 export function SidebarHeader({
   guilds,
   activeGuild,
   isHome,
-  setCreateDialogOpen
+  activeTab,
+  setActiveTab
 }: Props) {
-  const leaveGuild = useAppStore((s) => s.leaveGuild);
-  const navigate = useNavigate();
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
-  const [isLeaving, setIsLeaving] = useState(false);
-  const [actionTarget, setActionTarget] = useState<GuildActionTarget>(null);
+  const [createGuildDialogOpen, setCreateGuildDialogOpen] = useState(false);
 
-  const handleLeaveGuild = async () => {
-    if (!actionTarget) return;
-    setIsLeaving(true);
-    try {
-      await leaveGuild(actionTarget.id);
-      navigate({ to: "/g/@me" });
-      toast.success(`Left ${actionTarget.name}`);
-    } catch (e) {
-      toast.error("Failed to leave guild", { description: String(e) });
-    } finally {
-      setIsLeaving(false);
-      setLeaveDialogOpen(false);
-      setActionTarget(null);
-    }
-  };
+  const [createDialog, setCreateDialog] = useState<CreateDialogOptions>(null);
+
+  const [actionTarget, setActionTarget] = useState<Guild | null>(null);
 
   const openLeaveDialog = (guild: Guild) => {
     setActionTarget(guild);
     setLeaveDialogOpen(true);
   };
 
-  const triggerLabel = isHome
-    ? "Home"
-    : (activeGuild?.name ?? "Select a Guild");
-
   return (
     <>
-      <ShadSidebarHeader className="border-b h-8 flex  border-black/20 p-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-8 w-full justify-between rounded-none px-3 text-white hover:bg-white/5 focus-visible:ring-0 focus-visible:ring-offset-0"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                {!isHome && activeGuild && (
-                  <Avatar className="size-5 rounded-sm shrink-0">
-                    <AvatarImage src={activeGuild.icon_url ?? undefined} />
-                    <AvatarFallback className="text-[10px] rounded-sm bg-primary/20">
-                      {activeGuild.name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-                {isHome && (
-                  <Home className="size-4 shrink-0 text-muted-foreground" />
-                )}
-                <span className="truncate font-semibold text-sm">
-                  {triggerLabel}
-                </span>
-              </div>
-              <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-            </Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent
-            className="w-60 border-white/10 shadow-xl"
-            align="center"
-            sideOffset={4}
+      <ShadSidebarHeader className="flex px-0">
+        <HeaderDropdownMenu
+          guilds={guilds}
+          activeGuild={activeGuild}
+          setCreateDialogOpen={setCreateGuildDialogOpen}
+          openLeaveDialog={openLeaveDialog}
+        >
+          <Button
+            variant="ghost"
+            className="h-8 w-full justify-between px-3 text-white"
           >
-            <DropdownMenuItem
-              asChild
-              className="cursor-pointer group focus:text-white"
-            >
-              <Link to="/g/@me" className="flex w-full items-center gap-2">
-                <Home className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span>Home</span>
-              </Link>
-            </DropdownMenuItem>
-
-            {guilds.length > 0 && (
-              <>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
-                  Your Guilds
-                </p>
-                {guilds.map((guild) => (
-                  <GuildRow
-                    key={guild.id}
-                    guild={guild}
-                    isActive={guild.id === activeGuild?.id}
-                    onLeave={() => openLeaveDialog(guild)}
-                    onSettings={() => {
-                      /* TODO */
-                    }}
-                  />
-                ))}
-              </>
-            )}
-
-            <DropdownMenuSeparator className="bg-white/10" />
-            <DropdownMenuItem
-              onClick={() => setCreateDialogOpen(true)}
-              className="cursor-pointer"
-            >
-              <Plus className="size-4" />
-              <span>Create Guild</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <div className="flex items-center gap-2 min-w-0">
+              {!isHome && activeGuild && (
+                <Avatar className="size-5 rounded-sm shrink-0">
+                  <AvatarImage src={activeGuild.icon_url ?? undefined} />
+                  <AvatarFallback className="text-[10px] rounded-sm bg-primary/20">
+                    {activeGuild.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              {isHome && (
+                <Home className="size-4 shrink-0 text-muted-foreground" />
+              )}
+              <span className="truncate font-semibold text-sm">
+                {isHome ? "Home" : (activeGuild?.name ?? "Select a Guild")}
+              </span>
+            </div>
+            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+          </Button>
+        </HeaderDropdownMenu>
       </ShadSidebarHeader>
 
-      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Leave {actionTarget?.name}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              You'll need an invite to rejoin. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLeaving}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleLeaveGuild}
-              disabled={isLeaving}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-            >
-              {isLeaving ? (
-                <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : (
-                "Leave Guild"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-}
+      {!isHome && activeGuild && (
+        <div className="flex flex-col ">
+          <div className="flex items-center w-full gap-2 pt-1.5 mb-1.5">
+            <Tooltip>
+              <TooltipTrigger
+                delay={100}
+                className="flex-1"
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCreateDialog("menu")}
+                  >
+                    <Plus className="size-3.5" />
+                  </Button>
+                }
+              />
+              <TooltipContent side="bottom" align="start">
+                Create
+              </TooltipContent>
+            </Tooltip>
 
-type GuildRowProps = {
-  guild: Guild;
-  isActive: boolean;
-  onLeave: () => void;
-  onSettings: () => void;
-};
+            <Tooltip>
+              <TooltipTrigger
+                delay={100}
+                className="flex-1"
+                render={
+                  <Button variant="outline" size="sm">
+                    <Mail className="size-3.5" />
+                  </Button>
+                }
+              />
+              <TooltipContent side="bottom" align="center">
+                Invites
+              </TooltipContent>
+            </Tooltip>
 
-function GuildRow({ guild, isActive, onLeave, onSettings }: GuildRowProps) {
-  const [hovered, setHovered] = useState(false);
+            <Tooltip>
+              <TooltipTrigger
+                delay={100}
+                className="flex-1"
+                render={
+                  <Button variant="outline" size="sm">
+                    <Cog className="size-3.5" />
+                  </Button>
+                }
+              />
+              <TooltipContent side="bottom" align="center">
+                Guild Settings
+              </TooltipContent>
+            </Tooltip>
 
-  return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div
-          className="relative flex items-center rounded-sm"
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-        >
-          <DropdownMenuItem
-            asChild
-            className="cursor-pointer flex-1 focus:text-white pr-8"
-          >
-            <Link
-              to="/g/$guildId/$channelId"
-              params={{
-                guildId: guild.id,
-                channelId: guild.default_channel_id
-              }}
-              className="flex w-full items-center gap-2"
-            >
-              <Avatar className="size-5 rounded-sm shrink-0 border border-white/10">
-                <AvatarImage src={guild.icon_url ?? undefined} />
-                <AvatarFallback className="text-[10px] rounded-sm">
-                  {guild.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="truncate">{guild.name}</span>
-              {isActive && (
-                <span className="ml-auto size-1.5 rounded-full bg-primary shrink-0" />
-              )}
-            </Link>
-          </DropdownMenuItem>
+            <Tooltip>
+              <TooltipTrigger
+                delay={100}
+                className="flex-1"
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openLeaveDialog(activeGuild)}
+                  >
+                    <LogOut className="size-3.5" />
+                  </Button>
+                }
+              />
+              <TooltipContent side="bottom" align="end">
+                Leave Guild
+              </TooltipContent>
+            </Tooltip>
+          </div>
 
-          {hovered && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-1 size-5 shrink-0 hover:bg-white/10"
-              onPointerDown={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                // Simulate right-click to open context menu
-                const event = new MouseEvent("contextmenu", {
-                  bubbles: true,
-                  clientX: e.clientX,
-                  clientY: e.clientY
-                });
-                e.currentTarget.dispatchEvent(event);
-              }}
-            >
-              <MoreHorizontal className="size-3" />
-            </Button>
-          )}
+          <div className="flex px-1 mb-1.5 py-1 rounded-sm gap-1 bg-neutral-950 items-center">
+            {(["channels", "members"] as Tab[]).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-1.5 rounded-md py-1 text-xs font-medium transition-colors",
+                  activeTab === tab
+                    ? "bg-white/10 text-white"
+                    : "text-muted-foreground hover:text-white hover:bg-white/5"
+                )}
+              >
+                {tab === "channels" ? (
+                  <Hash className="size-3" />
+                ) : (
+                  <Users className="size-3" />
+                )}
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
-      </ContextMenuTrigger>
+      )}
 
-      <ContextMenuContent className="w-48 border-white/10">
-        <ContextMenuItem onClick={onSettings} className="cursor-pointer">
-          <Cog className="size-4" />
-          <span>Guild Settings</span>
-        </ContextMenuItem>
-        <ContextMenuSeparator className="bg-white/10" />
-        <ContextMenuItem
-          onClick={onLeave}
-          className="text-destructive focus:text-destructive cursor-pointer"
-        >
-          <LogOut className="size-4" />
-          <span>Leave Guild</span>
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+      <DialogCreateMenu
+        open={createDialog === "menu"}
+        onOpenChange={(v) => setCreateDialog(v ? "menu" : null)}
+        onCreateChannel={() => setCreateDialog("channel")}
+        onCreateEvent={() => setCreateDialog("event")}
+      />
+
+      <DialogCreateChannel
+        open={createDialog === "channel"}
+        onOpenChange={(v) => setCreateDialog(v ? "channel" : null)}
+        categories={activeGuild?.categories ?? []}
+        goBack={() => setCreateDialog("menu")}
+      />
+
+      <LeaveGuildDialog
+        open={leaveDialogOpen}
+        onOpenChange={setLeaveDialogOpen}
+        target={actionTarget}
+      />
+      <DialogCreateGuild
+        isOpen={createGuildDialogOpen}
+        setIsOpen={setCreateGuildDialogOpen}
+      />
+    </>
   );
 }

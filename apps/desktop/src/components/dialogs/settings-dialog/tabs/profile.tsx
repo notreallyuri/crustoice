@@ -10,7 +10,7 @@ import {
   InputGroupTextarea
 } from "@/components/ui/input-group";
 import { useState } from "react";
-import { BrushCleaning, Camera, Trash2, Save } from "lucide-react";
+import { BrushCleaning, Camera, Trash2 } from "lucide-react";
 import { useAppStore } from "@/store/app-store";
 import z from "zod";
 import { useForm } from "@tanstack/react-form";
@@ -199,7 +199,7 @@ export function ProfileSettings() {
                   />
                   <InputGroupAddon
                     align="inline-end"
-                    className="border-l px-2 flex items-center"
+                    className="border-l pl-2 h-full"
                   >
                     <span
                       className={cn(
@@ -284,10 +284,8 @@ export function ProfileSettings() {
             disabled={!form.state.canSubmit || form.state.isSubmitting}
             className="gap-2"
           >
-            {form.state.isSubmitting ? (
+            {form.state.isSubmitting && (
               <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Save className="size-4" />
             )}
             Save Changes
           </Button>

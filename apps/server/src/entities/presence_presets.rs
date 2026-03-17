@@ -63,7 +63,7 @@ impl From<Model> for PresencePreset {
                 "countdown" => PresenceTimer::Countdown {
                     seconds: model.timer_seconds.unwrap_or(0) as u64,
                 },
-                _ => PresenceTimer::None,
+                _ => PresenceTimer::Off,
             },
             kind: match model.preset_kind.as_str() {
                 "app_linked" => PresenceKind::AppLinked {

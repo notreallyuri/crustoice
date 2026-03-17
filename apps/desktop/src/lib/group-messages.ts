@@ -1,8 +1,8 @@
-import { ChatMessage } from "@/types";
+import { Message } from "@/types";
 
-export function groupMessages(messages: ChatMessage[]): ChatMessage[][] {
-  const groups: ChatMessage[][] = [];
-  let current: ChatMessage[] = [];
+export function groupMessages(messages: Message[]): Message[][] {
+  const groups: Message[][] = [];
+  let current: Message[] = [];
 
   for (const msg of messages) {
     if (current.length === 0) {

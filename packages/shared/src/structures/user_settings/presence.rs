@@ -14,7 +14,7 @@ pub struct PresencePreset {
 pub enum PresenceTimer {
     Elapsed,
     Countdown { seconds: u64 },
-    None,
+    Off,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

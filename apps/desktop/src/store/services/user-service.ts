@@ -9,16 +9,6 @@ export const createUserService: StateCreator<
   [],
   UserRepository
 > = (set, get) => ({
-  async sendMessage(content) {
-    const { activeChannelId } = get();
-    if (!activeChannelId) return;
-
-    await invoke("send_chat", {
-      channelId: activeChannelId,
-      content
-    });
-  },
-
   async fetchUser(userId) {
     console.log("Fetching user with ID:", userId);
   },

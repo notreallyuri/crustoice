@@ -54,6 +54,7 @@ pub async fn handle_chat(
             content,
             created_at: now.to_rfc3339(),
             edited_at: None,
+            thread_id: None,
         },
     };
 

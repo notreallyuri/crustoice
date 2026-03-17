@@ -1,12 +1,12 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "new-york",
+  "style": "base-mira",
   "rsc": false,
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/globals.css",
-    "baseColor": "neutral",
+    "css": "src/index.css",
+    "baseColor": "mauve",
     "cssVariables": true,
     "prefix": ""
   },
@@ -19,7 +19,7 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "registries": {
-    "@kibo-ui": "https://www.kibo-ui.com/r/{name}.json"
-  }
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "registries": {}
 }

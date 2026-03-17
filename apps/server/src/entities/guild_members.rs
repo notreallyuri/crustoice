@@ -10,7 +10,6 @@ pub struct Model {
     pub guild_id: String,
     #[sea_orm(primary_key, auto_increment = false)]
     pub user_id: String,
-    pub nickname: Option<String>,
     pub roles: Option<Json>,
     pub joined_at: DateTimeWithTimeZone,
 

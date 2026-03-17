@@ -1,9 +1,8 @@
-use serde::{Deserialize, Serialize};
-
 use crate::structures::prelude::{
     ChannelId, Guild, GuildId, GuildMember, Message, User, UserPresence, UserPublic,
     UserRelationship,
 };
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
