@@ -7,6 +7,7 @@ pub async fn get_channel_history(
     state: State<'_, ClientState>,
     channel_id: String,
     before: Option<i64>,
+    thread_id: Option<String>,
 ) -> Result<Vec<Message>, AppError> {
     let token = {
         let store = state.store.lock().await;
@@ -16,6 +17,9 @@ pub async fn get_channel_history(
     let mut url = format!("{}/channels/{}/history?limit=50", API_URL, channel_id);
     if let Some(before_ms) = before {
         url.push_str(&format!("&before={}", before_ms));
+    }
+    if let Some(tid) = thread_id {
+        url.push_str(&format!("&thread_id={}", tid));
     }
 
     let res = state

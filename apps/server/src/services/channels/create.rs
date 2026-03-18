@@ -31,27 +31,47 @@ pub async fn create_channel(
         return Err((StatusCode::NOT_FOUND, "Guild not found".to_string()));
     }
 
-    let channel_count = Channels::find()
-        .filter(channels::Column::GuildId.eq(guild_id.0.clone()))
-        .count(&state.db)
-        .await
-        .unwrap_or(0) as i32;
-
     let new_channel_id = Uuid::new_v4().to_string();
+
+    let category_id_str = match &payload {
+        CreateChannelRequest::Text { category_id, .. } => category_id.as_ref().map(|c| c.0.clone()),
+        CreateChannelRequest::Voice { category_id, .. } => {
+            category_id.as_ref().map(|c| c.0.clone())
+        }
+        CreateChannelRequest::Docs { category_id, .. } => category_id.as_ref().map(|c| c.0.clone()),
+        CreateChannelRequest::Canvas { category_id, .. } => {
+            category_id.as_ref().map(|c| c.0.clone())
+        }
+    };
+
+    let sibling_count = {
+        let base = Channels::find().filter(channels::Column::GuildId.eq(guild_id.0.clone()));
+
+        match &category_id_str {
+            Some(cat_id) => base
+                .filter(channels::Column::CategoryId.eq(cat_id.clone()))
+                .count(&state.db)
+                .await
+                .unwrap_or(0),
+            None => base
+                .filter(channels::Column::CategoryId.is_null())
+                .count(&state.db)
+                .await
+                .unwrap_or(0),
+        }
+    } as i32;
 
     let response = match payload {
         CreateChannelRequest::Text {
             name,
-            category_id,
+            category_id: _,
             mode,
         } => {
-            let category_id_str = category_id.as_ref().map(|c| c.0.clone());
-
             channels::ActiveModel {
                 id: Set(new_channel_id.clone()),
                 guild_id: Set(guild_id.0.clone()),
                 name: Set(name.clone()),
-                position: Set(channel_count),
+                position: Set(sibling_count),
                 category_id: Set(category_id_str.clone()),
                 kind: Set("text".to_string()),
                 mode: Set(Some(mode.as_str().to_string())),
@@ -67,7 +87,7 @@ pub async fn create_channel(
                 guild_id: guild_id.clone(),
                 category_id: category_id_str.map(CategoryId),
                 name,
-                position: channel_count,
+                position: sibling_count,
                 mode,
                 pins: vec![],
                 history: vec![],
@@ -76,18 +96,17 @@ pub async fn create_channel(
 
         CreateChannelRequest::Voice {
             name,
-            category_id,
+            category_id: _,
             bitrate,
             user_limit,
         } => {
-            let category_id_str = category_id.as_ref().map(|c| c.0.clone());
             let resolved_bitrate = bitrate.unwrap_or(64_000);
 
             channels::ActiveModel {
                 id: Set(new_channel_id.clone()),
                 guild_id: Set(guild_id.0.clone()),
                 name: Set(name.clone()),
-                position: Set(channel_count),
+                position: Set(sibling_count),
                 category_id: Set(category_id_str.clone()),
                 kind: Set("voice".to_string()),
                 mode: Set(None),
@@ -103,7 +122,7 @@ pub async fn create_channel(
                 guild_id: guild_id.clone(),
                 category_id: category_id_str.map(CategoryId),
                 name,
-                position: channel_count,
+                position: sibling_count,
                 bitrate: resolved_bitrate,
                 user_limit,
                 participants: vec![],

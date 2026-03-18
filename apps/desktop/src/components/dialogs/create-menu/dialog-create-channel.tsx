@@ -27,11 +27,19 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useForm } from "@tanstack/react-form";
-import { Hash, Volume2 } from "lucide-react";
+import {
+  FileText,
+  Hash,
+  Layers,
+  MessageSquare,
+  Volume2,
+  LayoutGrid
+} from "lucide-react";
 import z from "zod";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 import { toast } from "sonner";
+import type { ChannelMode } from "@/types";
 
 const MAX_NAME_LENGTH = 24;
 
@@ -43,9 +51,70 @@ const formSchema = z.object({
       MAX_NAME_LENGTH,
       `Channel name must be at most ${MAX_NAME_LENGTH} characters.`
     ),
-  type: z.enum(["text", "voice"]),
+  kind: z.enum(["text", "voice", "docs", "canvas"]),
+  mode: z.enum(["chat", "board", "threads"]),
   categoryId: z.string().nullable()
 });
+
+type ChannelKind = "text" | "voice" | "docs" | "canvas";
+
+const KIND_OPTIONS: {
+  value: ChannelKind;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+}[] = [
+  {
+    value: "text",
+    label: "Text",
+    icon: <Hash className="size-4" />,
+    description: "Chat, boards or threads"
+  },
+  {
+    value: "voice",
+    label: "Voice",
+    icon: <Volume2 className="size-4" />,
+    description: "Voice communication"
+  },
+  {
+    value: "docs",
+    label: "Docs",
+    icon: <FileText className="size-4" />,
+    description: "Collaborative document"
+  },
+  {
+    value: "canvas",
+    label: "Canvas",
+    icon: <Layers className="size-4" />,
+    description: "Visual workspace"
+  }
+];
+
+const MODE_OPTIONS: {
+  value: ChannelMode;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+}[] = [
+  {
+    value: "chat",
+    label: "Chat",
+    icon: <MessageSquare className="size-4" />,
+    description: "Classic linear chat"
+  },
+  {
+    value: "board",
+    label: "Board",
+    icon: <LayoutGrid className="size-4" />,
+    description: "Cards in a grid"
+  },
+  {
+    value: "threads",
+    label: "Threads",
+    icon: <Hash className="size-4" />,
+    description: "Threaded conversations"
+  }
+];
 
 type Props = {
   open: boolean;
@@ -65,27 +134,30 @@ export function DialogCreateChannel({
   const form = useForm({
     defaultValues: {
       name: "",
-      type: "text" as "text" | "voice",
+      kind: "text" as ChannelKind,
+      mode: "chat" as ChannelMode,
       categoryId: null as string | null
     },
-    validators: {
-      onSubmit: formSchema
-    },
+    validators: { onSubmit: formSchema },
     onSubmit: async ({ value }) => {
       try {
-        const payload =
-          value.type === "text"
-            ? {
-                kind: "text" as const,
-                name: value.name,
-                category_id: value.categoryId,
-                mode: "chat" as const
-              }
-            : {
-                kind: "voice" as const,
-                name: value.name,
-                category_id: value.categoryId
-              };
+        const base = {
+          name: value.name,
+          category_id: value.categoryId
+        };
+
+        const payload = (() => {
+          switch (value.kind) {
+            case "text":
+              return { ...base, kind: "text" as const, mode: value.mode };
+            case "voice":
+              return { ...base, kind: "voice" as const };
+            case "docs":
+              return { ...base, kind: "docs" as const };
+            case "canvas":
+              return { ...base, kind: "canvas" as const };
+          }
+        })();
 
         await createChannel(payload);
         onOpenChange(false);
@@ -96,6 +168,11 @@ export function DialogCreateChannel({
       }
     }
   });
+
+  function handleBack() {
+    form.reset();
+    goBack();
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -111,30 +188,32 @@ export function DialogCreateChannel({
           }}
         >
           <FieldGroup>
+            {/* Kind selector */}
             <form.Field
-              name="type"
+              name="kind"
               children={(field) => (
                 <Field>
                   <FieldLabel>Channel Type</FieldLabel>
                   <div className="grid grid-cols-2 gap-2">
-                    {(["text", "voice"] as const).map((t) => (
+                    {KIND_OPTIONS.map((opt) => (
                       <button
-                        key={t}
+                        key={opt.value}
                         type="button"
-                        onClick={() => field.handleChange(t)}
+                        onClick={() => field.handleChange(opt.value)}
                         className={cn(
-                          "flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors",
-                          field.state.value === t
+                          "flex flex-col items-start gap-1 rounded-md border px-3 py-2 text-sm transition-colors text-left",
+                          field.state.value === opt.value
                             ? "border-primary bg-primary/10 text-primary-foreground"
                             : "border-border text-muted-foreground hover:bg-muted/20"
                         )}
                       >
-                        {t === "text" ? (
-                          <Hash className="size-4" />
-                        ) : (
-                          <Volume2 className="size-4" />
-                        )}
-                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                        <span className="flex items-center gap-2 font-medium">
+                          {opt.icon}
+                          {opt.label}
+                        </span>
+                        <span className="text-xs opacity-60">
+                          {opt.description}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -142,6 +221,47 @@ export function DialogCreateChannel({
               )}
             />
 
+            {/* Mode selector — only shown for text channels */}
+            <form.Subscribe
+              selector={(s) => s.values.kind}
+              children={(kind) =>
+                kind === "text" ? (
+                  <form.Field
+                    name="mode"
+                    children={(field) => (
+                      <Field>
+                        <FieldLabel>Mode</FieldLabel>
+                        <div className="grid grid-cols-3 gap-2">
+                          {MODE_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => field.handleChange(opt.value)}
+                              className={cn(
+                                "flex flex-col items-start gap-1 rounded-md border px-3 py-2 text-sm transition-colors text-left",
+                                field.state.value === opt.value
+                                  ? "border-primary bg-primary/10 text-primary-foreground"
+                                  : "border-border text-muted-foreground hover:bg-muted/20"
+                              )}
+                            >
+                              <span className="flex items-center gap-1.5 font-medium">
+                                {opt.icon}
+                                {opt.label}
+                              </span>
+                              <span className="text-xs opacity-60">
+                                {opt.description}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </Field>
+                    )}
+                  />
+                ) : null
+              }
+            />
+
+            {/* Name */}
             <form.Field
               name="name"
               children={(field) => {
@@ -181,6 +301,7 @@ export function DialogCreateChannel({
               }}
             />
 
+            {/* Category */}
             <form.Field
               name="categoryId"
               children={(field) => (
@@ -217,7 +338,7 @@ export function DialogCreateChannel({
                   <Button
                     variant="outline"
                     type="button"
-                    onClick={goBack}
+                    onClick={handleBack}
                     disabled={isSubmitting}
                   >
                     Cancel

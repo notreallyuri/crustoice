@@ -20,9 +20,15 @@ import { HeaderDropdownMenu } from "./sidebar-header-parts/dropdown-menu";
 import { DialogCreateMenu } from "../dialogs/create-menu/dialog-main";
 import { DialogCreateGuild } from "../dialogs/dialog-create-guild";
 import { DialogCreateChannel } from "../dialogs/create-menu/dialog-create-channel";
+import { DialogCreateCategory } from "../dialogs/create-menu/dialog-create-category";
 
 export type Tab = "channels" | "members";
-export type CreateDialogOptions = "menu" | "channel" | "event" | null;
+export type CreateDialogOptions =
+  | "menu"
+  | "channel"
+  | "category"
+  | "event"
+  | null;
 
 type Props = {
   guilds: Guild[];
@@ -187,12 +193,19 @@ export function SidebarHeader({
         onOpenChange={(v) => setCreateDialog(v ? "menu" : null)}
         onCreateChannel={() => setCreateDialog("channel")}
         onCreateEvent={() => setCreateDialog("event")}
+        onCreateCategory={() => setCreateDialog("category")}
       />
 
       <DialogCreateChannel
         open={createDialog === "channel"}
         onOpenChange={(v) => setCreateDialog(v ? "channel" : null)}
         categories={activeGuild?.categories ?? []}
+        goBack={() => setCreateDialog("menu")}
+      />
+
+      <DialogCreateCategory
+        open={createDialog === "category"}
+        onOpenChange={(v) => setCreateDialog(v ? "category" : null)}
         goBack={() => setCreateDialog("menu")}
       />
 

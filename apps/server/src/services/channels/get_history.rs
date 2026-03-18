@@ -25,33 +25,60 @@ pub async fn get_channel_history(
         )
     })?;
 
-    let rows = if let Some(before_ms) = query.before {
-        state
-            .scylla
-            .query_unpaged(
-                "SELECT id, channel_id, author_id, content, created_at, edited_at
+    let thread_uuid = query
+        .thread_id
+        .as_deref()
+        .map(Uuid::parse_str)
+        .transpose()
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid thread_id: {}", e)))?;
+
+    let rows =
+        match (query.before, thread_uuid) {
+            (Some(before_ms), Some(thread_id)) => state
+                .scylla
+                .query_unpaged(
+                    "SELECT id, channel_id, author_id, content, created_at, edited_at, thread_id
                  FROM messages
-                 WHERE channel_id = ? AND created_at < ?
+                 WHERE channel_id = ? AND thread_id = ? AND created_at < ? AND deleted = false
                  LIMIT ?",
-                (channel_uuid, CqlTimestamp(before_ms), limit),
-            )
-            .await
-    } else {
-        state
-            .scylla
-            .query_unpaged(
-                "SELECT id, channel_id, author_id, content, created_at, edited_at
+                    (channel_uuid, thread_id, CqlTimestamp(before_ms), limit),
+                )
+                .await,
+            (Some(before_ms), None) => state
+                .scylla
+                .query_unpaged(
+                    "SELECT id, channel_id, author_id, content, created_at, edited_at, thread_id
                  FROM messages
-                 WHERE channel_id = ?
+                 WHERE channel_id = ? AND created_at < ? AND deleted = false
                  LIMIT ?",
-                (channel_uuid, limit),
-            )
-            .await
-    }
-    .map_err(|e| {
-        eprintln!("Scylla query error: {}", e);
-        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
-    })?;
+                    (channel_uuid, CqlTimestamp(before_ms), limit),
+                )
+                .await,
+            (None, Some(thread_id)) => state
+                .scylla
+                .query_unpaged(
+                    "SELECT id, channel_id, author_id, content, created_at, edited_at, thread_id
+                 FROM messages
+                 WHERE channel_id = ? AND thread_id = ? AND deleted = false
+                 LIMIT ?",
+                    (channel_uuid, thread_id, limit),
+                )
+                .await,
+            (None, None) => state
+                .scylla
+                .query_unpaged(
+                    "SELECT id, channel_id, author_id, content, created_at, edited_at, thread_id
+                 FROM messages
+                 WHERE channel_id = ? AND deleted = false
+                 LIMIT ?",
+                    (channel_uuid, limit),
+                )
+                .await,
+        }
+        .map_err(|e| {
+            eprintln!("Scylla query error: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
 
     let rows = rows.into_rows_result().map_err(|e| {
         eprintln!("into_rows_result error: {}", e);
@@ -59,7 +86,15 @@ pub async fn get_channel_history(
     })?;
 
     let mut messages: Vec<Message> = rows
-        .rows::<(Uuid, Uuid, Uuid, String, CqlTimestamp, Option<CqlTimestamp>)>()
+        .rows::<(
+            Uuid,
+            Uuid,
+            Uuid,
+            String,
+            CqlTimestamp,
+            Option<CqlTimestamp>,
+            Option<Uuid>,
+        )>()
         .map_err(|e| {
             eprintln!("rows deserialization error: {}", e);
             (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
@@ -69,18 +104,21 @@ pub async fn get_channel_history(
                 .ok()
         })
         .map(
-            |(id, channel_id, author_id, content, created_at_ms, edited_at_ms)| Message {
-                id: MessageId(id.to_string()),
-                channel_id: ChannelId(channel_id.to_string()),
-                author_id: UserId(author_id.to_string()),
-                content,
-                created_at: chrono::DateTime::from_timestamp_millis(created_at_ms.0)
-                    .map(|dt| dt.to_rfc3339())
-                    .unwrap_or_default(),
-                edited_at: edited_at_ms.and_then(|ts| {
-                    chrono::DateTime::from_timestamp_millis(ts.0).map(|dt| dt.to_rfc3339())
-                }),
-                thread_id: None,
+            |(id, channel_id, author_id, content, created_at_ms, edited_at_ms, thread_id)| {
+                Message {
+                    id: MessageId(id.to_string()),
+                    channel_id: ChannelId(channel_id.to_string()),
+                    author_id: UserId(author_id.to_string()),
+                    content,
+                    created_at: chrono::DateTime::from_timestamp_millis(created_at_ms.0)
+                        .map(|dt| dt.to_rfc3339())
+                        .unwrap_or_default(),
+                    edited_at: edited_at_ms.and_then(|ts| {
+                        chrono::DateTime::from_timestamp_millis(ts.0).map(|dt| dt.to_rfc3339())
+                    }),
+                    thread_id: thread_id.map(|t| MessageId(t.to_string())),
+                    deleted: false,
+                }
             },
         )
         .collect();

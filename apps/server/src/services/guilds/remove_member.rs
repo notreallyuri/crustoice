@@ -44,5 +44,12 @@ pub async fn remove_member_from_guild(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    let _ = crate::services::ws::presence::remove_from_guild_presence(
+        &state,
+        &guild_id,
+        &payload.user_id,
+    )
+    .await;
+
     Ok(StatusCode::NO_CONTENT)
 }

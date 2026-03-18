@@ -41,6 +41,17 @@ CREATE TABLE IF NOT EXISTS channels (
   bitrate INTEGER DEFAULT 64000
 );
 
+CREATE TABLE IF NOT EXISTS pinned_messages (
+  id          TEXT PRIMARY KEY,
+  channel_id  TEXT NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  message_id  TEXT NOT NULL,
+  pinned_by   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  pinned_at   TIMESTAMPTZ NOT NULL,
+  label       TEXT,
+
+  UNIQUE (channel_id, message_id)
+);
+
 CREATE TABLE IF NOT EXISTS invites (
   invite_code TEXT PRIMARY KEY,
   guild_id TEXT NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,

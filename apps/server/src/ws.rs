@@ -149,12 +149,15 @@ async fn handle_authenticated_message(
         ClientMessage::Chat {
             channel_id,
             content,
+            thread_id,
         } => {
             if content.is_empty() || content.len() > 2000 {
                 send_error(tx, "Message must be between 1 and 2000 characters");
                 return;
             }
-            if let Err(e) = handle_chat(channel_id, content, state, user_id.clone()).await {
+            if let Err(e) =
+                handle_chat(channel_id, content, state, user_id.clone(), thread_id).await
+            {
                 eprintln!("Chat error for {}: {}", user_id.0, e);
                 send_error(tx, "Failed to send message");
             }
@@ -162,6 +165,33 @@ async fn handle_authenticated_message(
         ClientMessage::SetPresence { presence } => {
             if let Err(e) = handle_set_presence(state, user_id, presence).await {
                 eprintln!("Failed to set presence for {}: {}", user_id.0, e);
+            }
+        }
+        ClientMessage::EditMessage {
+            channel_id,
+            message_id,
+            content,
+        } => {
+            if content.is_empty() || content.len() > 2000 {
+                send_error(tx, "Message must be between 1 and 2000 characters");
+                return;
+            }
+            if let Err(e) =
+                handle_edit_message(channel_id, message_id, content, state, user_id.clone()).await
+            {
+                eprintln!("Edit error for {}: {}", user_id.0, e);
+                send_error(tx, "Failed to edit message");
+            }
+        }
+        ClientMessage::DeleteMessage {
+            channel_id,
+            message_id,
+        } => {
+            if let Err(e) =
+                handle_delete_message(channel_id, message_id, state, user_id.clone()).await
+            {
+                eprintln!("Delete error for {}: {}", user_id.0, e);
+                send_error(tx, "Failed to delete message");
             }
         }
         ClientMessage::Identify { .. } => {}

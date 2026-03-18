@@ -62,8 +62,10 @@ pub async fn check_auth(
 
     {
         let mut store_guard = state.store.lock().await;
-        store_guard.jwt_token = Some(token);
+        store_guard.jwt_token = Some(token.clone());
     }
+
+    state.connect_ws(app_handle.clone(), token).await;
 
     Ok(UserId(user_id_str))
 }

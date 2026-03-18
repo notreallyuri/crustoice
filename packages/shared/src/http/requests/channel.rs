@@ -29,4 +29,5 @@ pub enum CreateChannelRequest {
 pub struct HistoryQuery {
     pub limit: Option<i64>,
     pub before: Option<i64>,
+    pub thread_id: Option<String>,
 }

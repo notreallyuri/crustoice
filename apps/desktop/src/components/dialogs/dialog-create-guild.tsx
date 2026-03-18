@@ -112,7 +112,7 @@ export function DialogCreateGuild({ isOpen, setIsOpen }: Props) {
                 <button
                   type="button"
                   onClick={handleSelectImage}
-                  className="group relative flex size-24 cursor-pointer items-center justify-center border-2 border-dashed border-border bg-background transition-colors hover:border-primary hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="group rounded-full relative flex size-24 cursor-pointer items-center justify-center border-2 border-dashed border-border bg-background transition-colors hover:border-primary hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {previewUrl ? (
                     <>
@@ -128,7 +128,7 @@ export function DialogCreateGuild({ isOpen, setIsOpen }: Props) {
                   ) : (
                     <>
                       <Camera className="size-8 text-muted-foreground transition-colors group-hover:text-primary" />
-                      <div className="absolute -right-2 -top-2 flex size-6 items-center justify-center bg-primary text-primary-foreground shadow-sm group-hover:bg-primary/90">
+                      <div className="absolute rounded-full -right-0.5 -top-0.5  flex size-6 items-center justify-center bg-primary text-primary-foreground shadow-sm group-hover:bg-primary/90">
                         <span className="text-xl font-bold leading-none">
                           +
                         </span>

@@ -1,7 +1,7 @@
 import type { StateCreator } from "zustand";
 import type { AppStore, UserRepository } from "../types";
 import { invoke } from "@tauri-apps/api/core";
-import { Guild, User } from "@/types";
+import { Guild, User, UserPublic } from "@/types";
 
 export const createUserService: StateCreator<
   AppStore,
@@ -20,7 +20,17 @@ export const createUserService: StateCreator<
   async getGuilds() {
     const guilds: Guild[] = await invoke<Guild[]>("get_guilds");
 
-    set({ guilds });
+    const userCache: Record<string, UserPublic> = {};
+    for (const guild of guilds) {
+      for (const member of guild.members) {
+        userCache[member.user_id] = member.data;
+      }
+    }
+
+    set((state) => ({
+      guilds,
+      userCache: { ...state.userCache, ...userCache }
+    }));
   },
   async leaveGuild(guildId) {
     await invoke("leave_guild", { guildId });

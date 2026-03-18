@@ -13,8 +13,10 @@ export const createAuthService: StateCreator<
     try {
       if (get().currentUser) return;
 
-      await invoke("check_auth");
       await get().initWebSocket();
+      await invoke("check_auth");
+
+      await Promise.all([get().getMe(), get().getGuilds()]);
     } catch (e) {
       console.log("Failed to restore session:", e);
       throw e;
@@ -45,15 +47,17 @@ export const createAuthService: StateCreator<
         messages: {},
         userCache: {},
         activeChannelId: null,
-        activeGuildId: null,
-        ws: null
+        activeGuildId: null
       });
     } catch (e) {
       toast.error("Logout failed. Please try again.");
       set({
         currentUser: null,
         guilds: [],
-        ws: null
+        messages: {},
+        userCache: {},
+        activeChannelId: null,
+        activeGuildId: null
       });
     }
   }

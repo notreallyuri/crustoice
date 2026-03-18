@@ -10,4 +10,5 @@ pub struct Message {
     pub created_at: String,
     pub edited_at: Option<String>,
     pub thread_id: Option<MessageId>,
+    pub deleted: bool,
 }

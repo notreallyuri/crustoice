@@ -89,5 +89,25 @@ pub async fn leave_guild(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    let _ = crate::services::ws::presence::remove_from_guild_presence(
+        &state,
+        &shared::structures::ids::GuildId(guild_id.clone()),
+        &shared::structures::ids::UserId(user_id.clone()),
+    )
+    .await;
+
+    let guild_still_exists = Guilds::find_by_id(guild_id.clone())
+        .one(&state.db)
+        .await
+        .unwrap_or(None)
+        .is_some();
+
+    if !guild_still_exists && let Ok(mut conn) = state.redis.get().await {
+        let _: Result<(), _> = deadpool_redis::redis::cmd("DEL")
+            .arg(format!("guild:{}:members", guild_id))
+            .query_async(&mut conn)
+            .await;
+    }
+
     Ok(StatusCode::NO_CONTENT)
 }

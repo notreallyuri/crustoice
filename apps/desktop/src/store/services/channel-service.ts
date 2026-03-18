@@ -30,14 +30,15 @@ export const createChannelService: StateCreator<
   deleteChannel: async (channelId) => {
     console.log("deleteChannel stub", channelId);
   },
-  selectChannel: async (guildId, channelId) => {
+  selectChannel: async (guildId, channelId, threadId) => {
     set({ activeGuildId: guildId, activeChannelId: channelId });
 
-    if (get().messages[channelId]?.length) return;
+    if (get().messages[channelId] !== undefined) return;
 
     try {
       const messages = await invoke<Message[]>("get_channel_history", {
-        channelId
+        channelId,
+        threadId: threadId ?? null
       });
       set((state) => ({
         messages: { ...state.messages, [channelId]: messages }

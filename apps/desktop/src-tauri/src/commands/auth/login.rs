@@ -43,9 +43,11 @@ pub async fn login(
 
     {
         let mut store_guard = state.store.lock().await;
-        store_guard.jwt_token = Some(auth_data.token);
+        store_guard.jwt_token = Some(auth_data.token.clone());
         store_guard.user_id = Some(auth_data.user_id.0.to_string());
     }
+
+    state.connect_ws(app_handle.clone(), auth_data.token).await;
 
     Ok(auth_data.user_id)
 }

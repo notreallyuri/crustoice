@@ -1,7 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useCurrentUser } from "@/hooks/use-current-user";
 import {
   InputGroup,
   InputGroupInput,
@@ -33,14 +32,14 @@ export function ProfileSettings() {
     originalPath
   } = useImageSelection();
   const updateProfile = useAppStore((s) => s.updateProfile);
-  const user = useCurrentUser();
+  const user = useAppStore((s) => s.currentUser);
 
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const form = useForm({
     defaultValues: {
-      display_name: user.profile.display_name || "",
-      bio: user.profile.bio || ""
+      display_name: user?.profile.display_name || "",
+      bio: user?.profile.bio || ""
     },
     validators: {
       onChange: z.object({
@@ -53,7 +52,7 @@ export function ProfileSettings() {
     },
     onSubmit: async ({ value }) => {
       if (
-        value.display_name === user.profile.display_name &&
+        value.display_name === user?.profile.display_name &&
         value.bio === (user.profile.bio || "")
       )
         return;
@@ -61,10 +60,10 @@ export function ProfileSettings() {
       try {
         await updateProfile({
           display_name:
-            value.display_name !== user.profile.display_name
+            value.display_name !== user?.profile.display_name
               ? value.display_name
               : undefined,
-          bio: value.bio !== user.profile.bio ? value.bio : undefined
+          bio: value.bio !== user?.profile.bio ? value.bio : undefined
         });
         toast.success("Profile updated");
       } catch (e) {
@@ -101,6 +100,8 @@ export function ProfileSettings() {
       });
     }
   }
+
+  if (!user) return null;
 
   return (
     <div className="w-full max-w-lg space-y-6 pb-10">

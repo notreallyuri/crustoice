@@ -24,8 +24,20 @@ pub async fn delete_guild(
         ));
     }
 
-    Guilds::delete_by_id(guild_id.0)
+    Guilds::delete_by_id(&guild_id.0)
         .exec(&state.db)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let mut conn = state
+        .redis
+        .get()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let _: () = deadpool_redis::redis::cmd("DEL")
+        .arg(format!("guild:{}:members", guild_id.0))
+        .query_async(&mut conn)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 

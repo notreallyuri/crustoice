@@ -11,9 +11,14 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarFooter } from "./sidebar-footer";
 import { SidebarHeader, Tab } from "./sidebar-header";
-import { ChevronDown, Hash, MessageSquareDashed, Users } from "lucide-react";
+import {
+  ChevronDown,
+  Hash,
+  MessageSquareDashed,
+  Users,
+  Volume2
+} from "lucide-react";
 import { useState } from "react";
-import { useCurrentUser } from "@/hooks/use-current-user";
 import { Channel, ChannelCategory, Guild } from "@/types";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarBadge, AvatarFallback } from "../ui/avatar";
@@ -35,6 +40,47 @@ function ChannelItem({
   guildId: string;
   isActive: boolean;
 }) {
+  const icon =
+    channel.kind === "voice" ? (
+      <Volume2
+        className={cn(
+          "size-4 shrink-0 transition-colors",
+          isActive
+            ? "text-white opacity-80"
+            : "opacity-40 group-hover/channel:opacity-60"
+        )}
+      />
+    ) : (
+      <Hash
+        className={cn(
+          "size-4 shrink-0 transition-colors",
+          isActive
+            ? "text-white opacity-80"
+            : "opacity-40 group-hover/channel:opacity-60"
+        )}
+      />
+    );
+
+  if (channel.kind === "voice") {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          isActive={isActive}
+          className={cn(
+            "group/channel text-muted-foreground hover:bg-white/5 hover:text-white transition-colors",
+            isActive && "bg-white/10 text-white"
+          )}
+          onClick={() => {
+            // TODO: join voice channel
+          }}
+        >
+          {icon}
+          <span className="truncate font-medium">{channel.name}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
@@ -49,14 +95,7 @@ function ChannelItem({
             params={{ guildId, channelId: channel.id }}
             className="w-full"
           >
-            <Hash
-              className={cn(
-                "size-4 shrink-0 transition-colors",
-                isActive
-                  ? "text-white opacity-80"
-                  : "opacity-40 group-hover/channel:opacity-60"
-              )}
-            />
+            {icon}
             <span className="truncate font-medium">{channel.name}</span>
           </Link>
         }
@@ -119,9 +158,11 @@ function CategoryGroup({
 export function Sidebar({ setSettingsDialogOpen }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("channels");
 
-  const currentUser = useCurrentUser();
+  const currentUser = useAppStore((s) => s.currentUser);
   const guilds = useAppStore((s) => s.guilds);
   const routerState = useRouterState();
+
+  console.log("Current user:", currentUser);
 
   const pathname = routerState.location.pathname;
   const isHome = pathname === "/g/@me";
@@ -145,6 +186,8 @@ export function Sidebar({ setSettingsDialogOpen }: Props) {
         .filter((ch) => ch.category_id === null)
         .sort((a, b) => a.position - b.position)
     : [];
+
+  if (!currentUser) return null;
 
   return (
     <ShadSidebar className="pt-0" variant="inset">

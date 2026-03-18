@@ -3,6 +3,7 @@ import { AppStore, WebSocketRepository } from "../types";
 import { invoke } from "@tauri-apps/api/core";
 import { ServerMessage } from "@/types/protocol";
 import { UserPublic } from "@/types";
+import { listen } from "@tauri-apps/api/event";
 
 export const createWebSocketService: StateCreator<
   AppStore,
@@ -11,89 +12,62 @@ export const createWebSocketService: StateCreator<
   WebSocketRepository
 > = (set, get) => ({
   async initWebSocket() {
-    const token = await invoke<string>("get_token");
-
-    return new Promise<void>((resolve, reject) => {
-      const ws = new WebSocket("ws://127.0.0.1:3000/ws");
-
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ type: "Identify", token }));
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data) as ServerMessage;
-          handleServerMessage(msg, set, get, ws);
-
-          if (msg.type === "IdentityValidated") {
-            resolve();
-          }
-        } catch (e) {
-          console.error("Failed to parse WS message:", e);
-        }
-      };
-
-      ws.onerror = () => {
-        console.error("WebSocket error");
-      };
-
-      ws.onclose = (event) => {
-        if (event.code === 4001) {
-          console.error("Identity failed, clearing session");
-          reject(new Error("Identity failed"));
-          get().logout();
-          return;
-        }
-        console.warn("WebSocket disconnected, reconnecting...");
-        setTimeout(() => get().initWebSocket(), 3000);
-      };
-
-      set({ ws });
+    await listen<ServerMessage>("ws://message", (event) => {
+      handleServerMessage(event.payload, set);
     });
   },
+
   setPresence(presence) {
-    const ws = get().ws;
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    ws.send(JSON.stringify({ type: "SetPresence", presence }));
+    invoke("ws_send", {
+      message: { type: "SetPresence", presence }
+    });
 
     const currentUser = get().currentUser;
     if (currentUser) {
       set({ currentUser: { ...currentUser, presence } });
     }
   },
-  sendMessage(channel_id, input) {
-    const content = input.trim();
-    const ws = get().ws;
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    ws.send(
-      JSON.stringify({
-        type: "Chat",
-        channel_id,
+
+  sendMessage(channel_id, content) {
+    invoke("ws_send", {
+      message: { type: "Chat", channel_id, content: content.trim() }
+    });
+  },
+
+  editMessage(channelId, messageId, content) {
+    invoke("ws_send", {
+      message: {
+        type: "EditMessage",
+        channel_id: channelId,
+        message_id: messageId,
         content
-      })
-    );
+      }
+    });
+  },
+
+  deleteMessage(channelId, messageId) {
+    invoke("ws_send", {
+      message: {
+        type: "DeleteMessage",
+        channel_id: channelId,
+        message_id: messageId
+      }
+    });
   }
 });
 
 function handleServerMessage(
   msg: ServerMessage,
-  set: {
-    (
-      partial:
-        | AppStore
-        | Partial<AppStore>
-        | ((state: AppStore) => AppStore | Partial<AppStore>),
-      replace?: false
-    ): void;
-    (state: AppStore | ((state: AppStore) => AppStore), replace: true): void;
-  },
-  _get: () => AppStore,
-  _ws: WebSocket
+  set: (
+    partial:
+      | AppStore
+      | Partial<AppStore>
+      | ((state: AppStore) => AppStore | Partial<AppStore>)
+  ) => void
 ) {
   switch (msg.type) {
     case "IdentityValidated": {
       set({ currentUser: msg.user });
-
       break;
     }
 
@@ -128,11 +102,10 @@ function handleServerMessage(
 
     case "Message": {
       const { message } = msg;
-      set((state: any) => {
+      set((state: AppStore) => {
         const existing = state.messages[message.channel_id] ?? [];
-        const isDuplicate = existing.some((m: any) => m.id === message.id);
+        const isDuplicate = existing.some((m) => m.id === message.id);
         if (isDuplicate) return state;
-
         return {
           messages: {
             ...state.messages,
@@ -143,35 +116,53 @@ function handleServerMessage(
       break;
     }
 
+    case "MessageEdited": {
+      const { message } = msg;
+      set((state: AppStore) => ({
+        messages: {
+          ...state.messages,
+          [message.channel_id]: (state.messages[message.channel_id] ?? []).map(
+            (m) => (m.id === message.id ? message : m)
+          )
+        }
+      }));
+      break;
+    }
+
+    case "MessageDeleted": {
+      const { channel_id, message_id } = msg;
+      set((state: AppStore) => ({
+        messages: {
+          ...state.messages,
+          [channel_id]: (state.messages[channel_id] ?? []).filter(
+            (m) => m.id !== message_id
+          )
+        }
+      }));
+      break;
+    }
+
     case "PresenceUpdate": {
       const { user } = msg;
-
       set((state: AppStore) => {
-        const updatedCache = {
-          ...state.userCache,
-          [user.id]: user
-        };
-
+        const updatedCache = { ...state.userCache, [user.id]: user };
         const updatedGuilds = state.guilds.map((guild) => ({
           ...guild,
           members: guild.members.map((member) =>
             member.user_id === user.id ? { ...member, data: user } : member
           )
         }));
-
         const currentUser = state.currentUser;
         const updatedCurrentUser =
           currentUser && currentUser.id === user.id
             ? { ...currentUser, presence: user.presence }
             : currentUser;
-
         return {
           userCache: updatedCache,
           guilds: updatedGuilds,
           currentUser: updatedCurrentUser
         };
       });
-
       break;
     }
 

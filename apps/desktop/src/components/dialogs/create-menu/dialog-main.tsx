@@ -1,4 +1,4 @@
-import { Calendar, Hash } from "lucide-react";
+import { Calendar, Hash, ChartBarStacked } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateChannel: () => void;
+  onCreateCategory: () => void;
   onCreateEvent: () => void;
 };
 
@@ -18,6 +19,7 @@ export function DialogCreateMenu({
   onOpenChange,
   open,
   onCreateChannel,
+  onCreateCategory,
   onCreateEvent
 }: Props) {
   function openNext(next: () => void) {
@@ -36,6 +38,11 @@ export function DialogCreateMenu({
             icon={Hash}
             label="Create channel"
             onClick={() => openNext(() => onCreateChannel())}
+          />
+          <SelectItem
+            icon={ChartBarStacked}
+            label="Create category"
+            onClick={() => openNext(() => onCreateCategory())}
           />
           <SelectItem
             icon={Calendar}

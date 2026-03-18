@@ -13,7 +13,6 @@ export const useAppStore = create<AppStore>()((set, get, api) => ({
   userCache: {},
   activeChannelId: null,
   activeGuildId: null,
-  ws: null,
 
   ...createAuthService(set, get, api),
   ...createUserService(set, get, api),
@@ -21,3 +20,7 @@ export const useAppStore = create<AppStore>()((set, get, api) => ({
   ...createChannelService(set, get, api),
   ...createWebSocketService(set, get, api)
 }));
+
+if (typeof window !== "undefined") {
+  (window as any).__store = useAppStore;
+}

@@ -54,7 +54,7 @@ export function LeaveGuildDialog({ open, onOpenChange, target }: Props) {
           <AlertDialogAction
             onClick={handleLeave}
             disabled={isLeaving}
-            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            variant="destructive"
           >
             {isLeaving ? (
               <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useCurrentUser } from "@/hooks/use-current-user";
 import { useState } from "react";
 import { KeyRound, Mail, ShieldAlert, UserSquare2 } from "lucide-react";
+import { useAppStore } from "@/store/app-store";
 
 export function AccountSettings() {
-  const user = useCurrentUser();
+  const user = useAppStore((s) => s.currentUser);
   const [revealEmail, setRevealEmail] = useState(false);
+
+  if (!user) return null;
 
   return (
     <div className="w-full max-w-3xl space-y-10 pb-10">
@@ -15,7 +17,7 @@ export function AccountSettings() {
           <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
             Identity & Login
           </h2>
-          <div className="border rounded border-white/10 bg-black/20 overflow-hidden">
+          <div className="border border-white/10 bg-black/20 overflow-hidden">
             <div className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
               <div className="flex items-center gap-4">
                 <div className="p-2 bg-white/5 border rounded border-white/10 text-muted-foreground">
@@ -101,7 +103,7 @@ export function AccountSettings() {
             Danger Zone
           </h2>
 
-          <div className="border rounded border-destructive/20 bg-destructive/5 overflow-hidden">
+          <div className="border border-destructive/20 bg-destructive/5 overflow-hidden">
             <div className="flex items-center justify-between p-4">
               <div>
                 <p className="text-sm font-medium text-foreground">

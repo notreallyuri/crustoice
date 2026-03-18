@@ -7,6 +7,11 @@ pub struct CreateGuildRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct CreateCategoryRequest {
+    pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CreateInviteRequest {
     pub max_uses: i32,
     pub expires_in_seconds: Option<i64>,

@@ -23,7 +23,7 @@ async fn main() {
         .allow_methods([Method::GET, Method::POST, Method::DELETE])
         .allow_headers(Any);
 
-    services::cron::start_invite_cleanup(state.db.clone());
+    services::cron::start_janitor(state.db.clone(), state.redis.clone());
 
     let app = Router::new()
         .route("/ws", get(ws::ws_handler))

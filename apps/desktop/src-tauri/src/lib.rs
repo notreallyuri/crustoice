@@ -1,5 +1,6 @@
 pub mod client_state;
 pub mod commands;
+pub mod services;
 pub mod structures;
 pub mod util;
 
@@ -8,6 +9,7 @@ use tauri::Manager;
 use tauri_plugin_store::StoreExt;
 
 const API_URL: &str = "http://127.0.0.1:3000/api";
+const WS_URL: &str = "ws://127.0.0.1:3000/ws";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -60,7 +62,8 @@ pub fn run() {
             user::prelude::change_password,
             guild::prelude::create_guild,
             channel::prelude::get_channel_history,
-            channel::prelude::create_channel
+            channel::prelude::create_channel,
+            ws::prelude::ws_send
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

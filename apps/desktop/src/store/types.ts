@@ -59,13 +59,19 @@ export interface UserRepository {
 export interface ChannelRepository {
   createChannel: (payload: CreateChannelPayload) => Promise<void>;
   deleteChannel: (channelId: ChannelId) => Promise<void>;
-  selectChannel: (guildId: GuildId, channelId: ChannelId) => Promise<void>;
+  selectChannel: (
+    guildId: GuildId,
+    channelId: ChannelId,
+    threadId?: string
+  ) => Promise<void>;
 }
 
 export interface WebSocketRepository {
   initWebSocket: () => Promise<void>;
   setPresence: (presence: UserPresence) => void;
   sendMessage: (channel_id: string, content: string) => void;
+  editMessage: (channelId: string, messageId: string, content: string) => void;
+  deleteMessage: (channelId: string, messageId: string) => void;
 }
 
 export type AppRepository = GuildRepository &
@@ -81,7 +87,6 @@ export interface AppState {
   userCache: Record<UserId, UserPublic>;
   activeChannelId: ChannelId | null;
   activeGuildId: GuildId | null;
-  ws: WebSocket | null;
 }
 
 export type AppStore = AppState & AppRepository;

@@ -24,6 +24,7 @@ export interface Message {
   created_at: string;
   edited_at: string | null;
   thread_id: MessageId | null;
+  deleted: boolean;
 }
 
 // --- Channels ---
@@ -57,9 +58,25 @@ export interface VoiceChannel {
   participants: VoiceParticipant[];
 }
 
+export interface DocsChannel {
+  id: ChannelId;
+  name: string;
+  category_id: CategoryId | null;
+  position: number;
+}
+
+export interface CanvasChannel {
+  id: ChannelId;
+  name: string;
+  category_id: CategoryId | null;
+  position: number;
+}
+
 export type Channel =
   | ({ kind: "text" } & TextChannel)
-  | ({ kind: "voice" } & VoiceChannel);
+  | ({ kind: "voice" } & VoiceChannel)
+  | ({ kind: "canvas" } & CanvasChannel)
+  | ({ kind: "docs" } & DocsChannel);
 
 // --- Category ---
 

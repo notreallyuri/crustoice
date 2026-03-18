@@ -102,6 +102,16 @@ pub async fn create_guild(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    if let Err(e) = crate::services::ws::presence::add_to_guild_presence(
+        &state,
+        &GuildId(guild_id.clone()),
+        &UserId(user_id.clone()),
+    )
+    .await
+    {
+        eprintln!("Failed to add owner to guild presence: {}", e);
+    }
+
     let general_text_channel = TextChannel {
         id: ChannelId(inserted_text_channel.id),
         guild_id: GuildId(inserted_text_channel.guild_id),

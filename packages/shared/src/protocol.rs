@@ -1,6 +1,6 @@
 use crate::structures::prelude::{
-    ChannelId, Guild, GuildId, GuildMember, Message, User, UserPresence, UserPublic,
-    UserRelationship,
+    ChannelCategory, ChannelId, Guild, GuildId, GuildMember, Message, MessageId, PinnedMessage,
+    User, UserPresence, UserPublic, UserRelationship,
 };
 use serde::{Deserialize, Serialize};
 
@@ -16,6 +16,25 @@ pub enum ClientMessage {
     Chat {
         channel_id: ChannelId,
         content: String,
+        thread_id: Option<MessageId>,
+    },
+    EditMessage {
+        channel_id: ChannelId,
+        message_id: MessageId,
+        content: String,
+    },
+    DeleteMessage {
+        channel_id: ChannelId,
+        message_id: MessageId,
+    },
+    PinMessage {
+        channel_id: ChannelId,
+        message_id: MessageId,
+        label: Option<String>,
+    },
+    UnpinMessage {
+        channel_id: ChannelId,
+        message_id: MessageId,
     },
     SetPresence {
         presence: UserPresence,
@@ -35,8 +54,27 @@ pub enum ServerMessage {
     PresenceUpdate {
         user: UserPublic,
     },
+    CategoryCreated {
+        guild_id: GuildId,
+        category: ChannelCategory,
+    },
     Message {
         message: Message,
+    },
+    MessageEdited {
+        message: Message,
+    },
+    MessageDeleted {
+        channel_id: ChannelId,
+        message_id: MessageId,
+    },
+    MessagePinned {
+        channel_id: ChannelId,
+        pin: PinnedMessage,
+    },
+    MessageUnpinned {
+        channel_id: ChannelId,
+        message_id: MessageId,
     },
     GuildJoined {
         guild: Guild,
