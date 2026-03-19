@@ -13,6 +13,10 @@ export type LoginPayload = {
   password: string;
 };
 
+export type CreateCategoryPayload = {
+  name: string;
+};
+
 export type CreateChannelPayload =
   | {
       kind: "text";
@@ -46,6 +50,8 @@ export type UpdateProfilePayload = {
   display_name?: string;
   bio?: string;
   avatar_url?: string;
+  banner_url?: string;
+  profile_color?: string;
 };
 
 export type UpdateUsernamePayload = {

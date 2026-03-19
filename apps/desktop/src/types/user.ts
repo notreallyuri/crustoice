@@ -59,6 +59,8 @@ export interface UserProfile {
   username: string;
   display_name: string;
   avatar_url: string | null;
+  banner_url: string | null;
+  profile_color: string | null;
   bio: string | null;
 }
 
@@ -96,6 +98,8 @@ export interface UserPublic {
   username: string;
   display_name: string;
   avatar_url: string | null;
+  banner_url: string | null;
   bio: string | null;
   presence: UserPresence;
+  profile_color: string | null;
 }

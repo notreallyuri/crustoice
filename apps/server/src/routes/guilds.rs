@@ -1,4 +1,7 @@
-use crate::{services::channels, services::guilds, state::SharedState};
+use crate::{
+    services::{categories, channels, guilds},
+    state::SharedState,
+};
 use axum::{
     Router,
     routing::{delete, post},
@@ -14,4 +17,5 @@ pub fn router() -> Router<SharedState> {
             delete(guilds::prelude::remove_member_from_guild),
         )
         .route("/{guild_id}/channels", post(channels::create_channel))
+        .route("/{guild_id}/categories", post(categories::create_category))
 }

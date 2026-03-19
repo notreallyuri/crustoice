@@ -19,22 +19,24 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { useImageSelection } from "@/hooks/use-image-selection";
 import { cn } from "@/lib/utils";
 import { CropResult } from "@/components/kibo-ui/image-crop";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
 
 const MAX_BIO_LENGTH = 250;
 const MAX_NAME_LENGTH = 32;
 
 export function ProfileSettings() {
-  const {
-    previewUrl,
-    handleSelectImage,
-    isSelecting,
-    clearSelection,
-    originalPath
-  } = useImageSelection();
+  const pfp = useImageSelection();
+  const banner = useImageSelection();
+
   const updateProfile = useAppStore((s) => s.updateProfile);
   const user = useAppStore((s) => s.currentUser);
 
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -73,20 +75,42 @@ export function ProfileSettings() {
     }
   });
 
-  async function handleCropSuccess(cropMath: CropResult) {
+  async function handleAvatarCropSuccess(crop: CropResult) {
     setIsUploadingAvatar(true);
-    if (!originalPath) {
+    if (!pfp.originalPath) {
       setIsUploadingAvatar(false);
       return;
     }
     try {
-      await updateProfile({ avatar_url: originalPath }, cropMath);
+      await updateProfile({ avatar_url: pfp.originalPath }, crop);
       toast.success("Avatar updated successfully");
     } catch (e) {
       toast.error("Failed to upload avatar", { description: String(e) });
     } finally {
       setIsUploadingAvatar(false);
-      clearSelection();
+      pfp.clearSelection();
+    }
+  }
+
+  async function handleBannerCropSuccess(cropMath: CropResult) {
+    setIsUploadingBanner(true);
+    if (!banner.originalPath) {
+      setIsUploadingBanner(false);
+      return;
+    }
+
+    try {
+      await updateProfile(
+        { banner_url: banner.originalPath },
+        undefined,
+        cropMath
+      );
+      toast.success("Banner updated successfully");
+    } catch (e) {
+      toast.error("Failed to upload banner", { description: String(e) });
+    } finally {
+      setIsUploadingBanner(false);
+      banner.clearSelection();
     }
   }
 
@@ -101,14 +125,56 @@ export function ProfileSettings() {
     }
   }
 
+  async function handleRemoveBanner() {
+    try {
+      await updateProfile({ banner_url: "" });
+      toast.success("Banner removed");
+    } catch (e) {
+      toast.error("Failed to remove banner", { description: String(e) });
+    }
+  }
+
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-lg space-y-6 pb-10">
-      {/* Avatar banner section */}
+    <div className="w-full h-fit max-w-lg space-y-6 pb-10">
       <div className="relative rounded-lg border overflow-hidden">
-        {/* Banner background */}
-        <div className="h-24 bg-linear-to-br from-primary/30 via-primary/10 to-transparent border-b border-border" />
+        <div className="relative group/banner h-24">
+          {user.profile.banner_url ? (
+            <img
+              src={user.profile.banner_url}
+              className="w-full h-full object-cover"
+              alt="Profile banner"
+            />
+          ) : (
+            <div className="w-full h-full bg-linear-to-br from-primary/30 via-primary/10 to-transparent border-b border-border" />
+          )}
+
+          <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 group-hover/banner:opacity-100 transition-opacity">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={banner.handleSelectImage}
+              disabled={isUploadingBanner}
+              className="text-white hover:text-white hover:bg-white/20"
+            >
+              <Camera className="size-4 mr-1" />
+              {isUploadingBanner ? "Uploading..." : "Change Banner"}
+            </Button>
+            {user.profile.banner_url && (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={handleRemoveBanner}
+                className="text-destructive hover:text-destructive hover:bg-destructive/20"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* Avatar overlapping the banner */}
         <div className="px-4 pb-4">
@@ -122,8 +188,8 @@ export function ProfileSettings() {
               </Avatar>
               <button
                 type="button"
-                onClick={handleSelectImage}
-                disabled={isSelecting || isUploadingAvatar}
+                onClick={pfp.handleSelectImage}
+                disabled={pfp.isSelecting || isUploadingAvatar}
                 className="absolute inset-0 rounded-full flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               >
                 <Camera className="size-6 text-white" />
@@ -279,6 +345,35 @@ export function ProfileSettings() {
           }}
         />
 
+        <Field>
+          <FieldLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Profile Color
+          </FieldLabel>
+          <p className="text-xs text-muted-foreground">
+            Used as banner background when no banner image is set.
+          </p>
+          <div className="flex items-center gap-3">
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <button
+                    type="button"
+                    className="size-8 rounded-md border border-border shadow-sm transition-colors hover:border-primary"
+                    aria-label="Pick profile color"
+                  />
+                }
+              ></PopoverTrigger>
+              <PopoverContent
+                className="w-fit p-4"
+                align="start"
+              ></PopoverContent>
+            </Popover>
+            <span className="text-xs text-muted-foreground font-mono">
+              No color set
+            </span>
+          </div>
+        </Field>
+
         <div className="flex justify-end pt-2">
           <Button
             type="submit"
@@ -294,9 +389,20 @@ export function ProfileSettings() {
       </form>
 
       <DialogCropper
-        previewUrl={previewUrl}
-        onClose={clearSelection}
-        onSuccess={handleCropSuccess}
+        previewUrl={pfp.previewUrl}
+        onClose={pfp.clearSelection}
+        onSuccess={handleAvatarCropSuccess}
+        aspect={1}
+        circular
+        title="Crop Avatar"
+      />
+
+      <DialogCropper
+        previewUrl={banner.previewUrl}
+        onClose={banner.clearSelection}
+        onSuccess={handleBannerCropSuccess}
+        aspect={3}
+        title="Crop Banner"
       />
     </div>
   );

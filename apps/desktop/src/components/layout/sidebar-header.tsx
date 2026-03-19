@@ -72,9 +72,9 @@ export function SidebarHeader({
           >
             <div className="flex items-center gap-2 min-w-0">
               {!isHome && activeGuild && (
-                <Avatar className="size-5 rounded-sm shrink-0">
+                <Avatar className="size-5 shrink-0">
                   <AvatarImage src={activeGuild.icon_url ?? undefined} />
-                  <AvatarFallback className="text-[10px] rounded-sm bg-primary/20">
+                  <AvatarFallback className="text-[10px] bg-primary/20">
                     {activeGuild.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>

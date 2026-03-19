@@ -28,21 +28,21 @@ export function SettingsDialog({ open, onOpenChange }: Props) {
         <DialogDescription className="sr-only">
           Configure your preferences and settings for the application
         </DialogDescription>
-        <SidebarProvider>
+        <SidebarProvider className="min-h-0 flex-1">
           <SettingsSidebar
             currentRoute={activeRoute}
             data={sidebarData}
             onRouteChange={setActiveRoute}
             user={user}
           />
-          <main className="relative flex flex-1 flex-col overflow-hidden bg-background">
-            <div className="sticky w-full px-8 py-2 ">
+          <main className="relative flex flex-1 flex-col overflow-hidden bg-background min-h-0">
+            <div className="w-full px-8 py-2 border-b border-border shrink-0">
               <h1 className="font-bold text-2xl">{activeRoute.name}</h1>
               <p className="text-muted-foreground text-sm">
                 {activeRoute.description}
               </p>
             </div>
-            <div className="overflow-y-auto px-8 py-6">
+            <div className="flex-1 overflow-y-auto px-8 py-6 min-h-0">
               <SettingsRender currentRoute={activeRoute.name} />
             </div>
           </main>

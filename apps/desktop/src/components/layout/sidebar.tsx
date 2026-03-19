@@ -162,8 +162,6 @@ export function Sidebar({ setSettingsDialogOpen }: Props) {
   const guilds = useAppStore((s) => s.guilds);
   const routerState = useRouterState();
 
-  console.log("Current user:", currentUser);
-
   const pathname = routerState.location.pathname;
   const isHome = pathname === "/g/@me";
 

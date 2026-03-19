@@ -35,7 +35,7 @@ pub async fn confirm_upload(
     match params.resource.as_str() {
         "avatar" => {
             let final_url = format!(
-                "{}/avatars/{}/pfp.{}?v={}",
+                "{}/users/{}/pfp.{}?v={}",
                 public_base_url, params.id, params.ext, timestamp
             );
 
@@ -51,6 +51,29 @@ pub async fn confirm_upload(
 
             let mut active_user: users::ActiveModel = user_model.into();
             active_user.avatar_url = Set(Some(final_url));
+            active_user
+                .update(&state.db)
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        }
+        "banner" => {
+            let final_url = format!(
+                "{}/users/{}/banner.{}?v={}",
+                public_base_url, params.id, params.ext, timestamp
+            );
+
+            if user_id != params.id {
+                return Err((StatusCode::FORBIDDEN, "Unauthorized".into()));
+            }
+
+            let user_model = users::Entity::find_by_id(params.id.clone())
+                .one(&state.db)
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+                .ok_or((StatusCode::NOT_FOUND, "User not found".to_string()))?;
+
+            let mut active_user: users::ActiveModel = user_model.into();
+            active_user.banner_url = Set(Some(final_url));
             active_user
                 .update(&state.db)
                 .await
@@ -113,7 +136,17 @@ pub async fn get_upload_url(
                 ));
             }
 
-            format!("avatars/{}/pfp.{}", params.id, ext)
+            format!("users/{}/pfp.{}", params.id, ext)
+        }
+        "banner" => {
+            if params.id != user_id {
+                return Err((
+                    StatusCode::FORBIDDEN,
+                    "You can only update your own banner".into(),
+                ));
+            }
+
+            format!("users/{}/banner.{}", params.id, ext)
         }
         "guild" => {
             let guild = guilds::Entity::find_by_id(params.id.clone())

@@ -1,6 +1,6 @@
 use crate::structures::prelude::{
-    ChannelCategory, ChannelId, Guild, GuildId, GuildMember, Message, MessageId, PinnedMessage,
-    User, UserPresence, UserPublic, UserRelationship,
+    Channel, ChannelCategory, ChannelId, Guild, GuildId, GuildMember, Message, MessageId,
+    PinnedMessage, User, UserPresence, UserPublic, UserRelationship,
 };
 use serde::{Deserialize, Serialize};
 
@@ -53,6 +53,10 @@ pub enum ServerMessage {
     },
     PresenceUpdate {
         user: UserPublic,
+    },
+    ChannelCreated {
+        guild_id: GuildId,
+        channel: Channel,
     },
     CategoryCreated {
         guild_id: GuildId,

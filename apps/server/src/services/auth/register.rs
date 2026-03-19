@@ -61,6 +61,8 @@ pub async fn register(
         password_hash: Set(hashed_password),
         bio: Set(None),
         avatar_url: Set(None),
+        banner_url: Set(None),
+        profile_color: Set(None),
     };
 
     let default_settings = user_settings::ActiveModel {

@@ -35,24 +35,25 @@ export function SidebarFooter({ currentUser, setSettingsDialogOpen }: Props) {
       username: user.profile.username,
       display_name: user.profile.display_name,
       avatar_url: user.profile.avatar_url,
+      banner_url: user.profile.banner_url,
+      profile_color: user.profile.profile_color,
       bio: user.profile.bio,
       presence: user.presence
     };
   }
 
-  console.log("Presence status:", currentUser.presence.status);
-
   return (
     <ShadSidebarFooter className="flex-row items-center justify-between p-0  relative">
-      <div className="border flex pr-2 w-full rounded">
+      <div className="border flex pr-2 w-full">
         <UserProfileCard
           side="top"
           align="start"
+          className="mt-2"
           user={publicFromUser(currentUser)}
           showPresenceAction
         >
           <button
-            className="flex flex-1 min-w-0 cursor-pointer items-center gap-2.5 rounded-l px-2 py-1.5 transition-colors hover:bg-white/8 group"
+            className="flex flex-1 min-w-0 cursor-pointer items-center gap-2.5 px-2 py-1.5 transition-colors hover:bg-white/8 group"
             type="button"
           >
             <div className="relative ">

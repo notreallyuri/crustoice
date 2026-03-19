@@ -13,13 +13,19 @@ type Props = {
   previewUrl: string | null;
   onClose: () => void;
   onSuccess: (crop: CropResult) => void;
+  aspect?: number;
+  circular?: boolean;
+  title?: string;
 };
 
 export function DialogCropper({
   isOpen: controlledOpen,
   previewUrl,
   onClose,
-  onSuccess
+  onSuccess,
+  aspect = 1,
+  circular = false,
+  title = "Crop Image"
 }: Props) {
   const isOpen = controlledOpen ?? !!previewUrl;
 
@@ -27,15 +33,15 @@ export function DialogCropper({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Crop Image</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center py-4">
           {previewUrl && (
             <ImageCrop
-              aspect={1}
+              aspect={aspect}
               imageUrl={previewUrl}
               onCrop={onSuccess}
-              circularCrop
+              circularCrop={circular}
             >
               <ImageCropContent className="max-w-md " />
               <div className="flex items-center justify-end gap-2 mt-4">

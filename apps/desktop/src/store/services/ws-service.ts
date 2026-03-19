@@ -142,6 +142,28 @@ function handleServerMessage(
       break;
     }
 
+    case "ChannelCreated": {
+      const { guild_id, channel } = msg;
+      set((state: AppStore) => ({
+        guilds: state.guilds.map((g) =>
+          g.id === guild_id ? { ...g, channels: [...g.channels, channel] } : g
+        )
+      }));
+      break;
+    }
+
+    case "CategoryCreated": {
+      const { guild_id, category } = msg;
+      set((state: AppStore) => ({
+        guilds: state.guilds.map((g) =>
+          g.id === guild_id
+            ? { ...g, categories: [...g.categories, category] }
+            : g
+        )
+      }));
+      break;
+    }
+
     case "PresenceUpdate": {
       const { user } = msg;
       set((state: AppStore) => {

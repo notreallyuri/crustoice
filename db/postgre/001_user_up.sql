@@ -4,7 +4,9 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   display_name TEXT,
+  banner_url TEXT,
   avatar_url TEXT,
+  profile_color TEXT,
   bio TEXT
 );
 

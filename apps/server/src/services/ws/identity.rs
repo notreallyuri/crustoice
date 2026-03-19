@@ -87,7 +87,9 @@ pub async fn handle_identify(
             username: user_data.username.clone(),
             display_name: display_name.clone(),
             avatar_url: user_data.avatar_url.clone(),
+            banner_url: user_data.banner_url.clone(),
             bio: user_data.bio.clone(),
+            profile_color: user_data.profile_color.clone(),
         },
         settings: get_full_user_settings(&user_id.0, &state.db)
             .await
@@ -121,7 +123,9 @@ pub async fn handle_identify(
             username: user_data.username,
             display_name,
             avatar_url: user_data.avatar_url,
+            banner_url: user_data.banner_url,
             bio: user_data.bio,
+            profile_color: user_data.profile_color,
         },
         presence: initial_presence,
     };

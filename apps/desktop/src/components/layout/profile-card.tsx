@@ -40,9 +40,28 @@ export function UserProfileCard({
         align={align}
         className={cn("w-72 p-0 overflow-hidden", className)}
       >
-        <div className="h-16 bg-linear-to-br from-primary/40 via-primary/20 to-transparent" />
+        {user.banner_url ? (
+          <img
+            src={user.banner_url}
+            alt=""
+            className="w-full h-16 object-cover"
+          />
+        ) : (
+          <div
+            className={cn(
+              "h-16",
+              !user.profile_color &&
+                "bg-linear-to-br from-primary/40 via-primary/20 to-transparent"
+            )}
+            style={
+              user.profile_color
+                ? { backgroundColor: user.profile_color }
+                : undefined
+            }
+          />
+        )}
         <div className="px-4 pb-4">
-          <div className="-mt-8 mb-3">
+          <div className="-mt-10 mb-3">
             <Avatar className="size-16 border-4 border-popover ring-1 ring-border/50">
               {user.avatar_url ? (
                 <AvatarGif

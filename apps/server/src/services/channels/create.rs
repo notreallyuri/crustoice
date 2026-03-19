@@ -13,6 +13,7 @@ use sea_orm::{
 };
 use shared::{
     http::prelude::CreateChannelRequest,
+    protocol::ServerMessage,
     structures::prelude::{CategoryId, Channel, ChannelId, GuildId, TextChannel, VoiceChannel},
 };
 use uuid::Uuid;
@@ -136,6 +137,13 @@ pub async fn create_channel(
             ));
         }
     };
+
+    let payload = ServerMessage::ChannelCreated {
+        guild_id: guild_id.clone(),
+        channel: response.clone(),
+    };
+
+    crate::services::ws::broadcast::to_guild(&state, &guild_id, &payload).await;
 
     Ok((StatusCode::CREATED, Json(response)))
 }

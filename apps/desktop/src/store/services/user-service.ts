@@ -38,8 +38,8 @@ export const createUserService: StateCreator<
     get().getGuilds();
   },
 
-  async updateProfile(payload, crop) {
-    await invoke("update_profile", { payload, crop });
+  async updateProfile(payload, pfpCrop, bannerCrop) {
+    await invoke("update_profile", { payload, pfpCrop, bannerCrop });
     await get().getMe();
   },
   async updateUsername(payload) {

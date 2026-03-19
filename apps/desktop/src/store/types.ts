@@ -10,6 +10,7 @@ import {
   UserPublic
 } from "@/types";
 import {
+  CreateCategoryPayload,
   CreateChannelPayload,
   CreateGuilldPayload,
   LoginPayload,
@@ -49,7 +50,8 @@ export interface UserRepository {
 
   updateProfile: (
     payload: UpdateProfilePayload,
-    crop?: CropResult
+    pfp_crop?: CropResult,
+    banner_crop?: CropResult
   ) => Promise<void>;
   updateUsername: (payload: UpdateUsernamePayload) => Promise<void>;
   updateEmail: (payload: UpdateEmailPayload) => Promise<void>;
@@ -58,6 +60,7 @@ export interface UserRepository {
 
 export interface ChannelRepository {
   createChannel: (payload: CreateChannelPayload) => Promise<void>;
+  createCategory: (payload: CreateCategoryPayload) => Promise<void>;
   deleteChannel: (channelId: ChannelId) => Promise<void>;
   selectChannel: (
     guildId: GuildId,

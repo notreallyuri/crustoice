@@ -46,6 +46,8 @@ pub struct UserProfile {
     pub username: String,
     pub display_name: String,
     pub avatar_url: Option<String>,
+    pub banner_url: Option<String>,
+    pub profile_color: Option<String>,
     pub bio: Option<String>,
 }
 

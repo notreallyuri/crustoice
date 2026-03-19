@@ -13,6 +13,7 @@ use sea_orm::{
 };
 use shared::{
     http::prelude::CreateCategoryRequest,
+    protocol::ServerMessage,
     structures::prelude::{CategoryId, ChannelCategory, GuildId},
 };
 use uuid::Uuid;
@@ -60,6 +61,13 @@ pub async fn create_category(
         name: payload.name,
         position,
     };
+
+    let payload = ServerMessage::CategoryCreated {
+        guild_id: guild_id.clone(),
+        category: category.clone(),
+    };
+
+    crate::services::ws::broadcast::to_guild(&state, &guild_id, &payload).await;
 
     Ok((StatusCode::CREATED, Json(category)))
 }

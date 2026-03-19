@@ -1,7 +1,7 @@
 import { StateCreator } from "zustand";
 import { AppStore, ChannelRepository } from "../types";
 import { invoke } from "@tauri-apps/api/core";
-import { Message, Channel } from "@/types";
+import { Message, Channel, ChannelCategory } from "@/types";
 
 export const createChannelService: StateCreator<
   AppStore,
@@ -14,18 +14,20 @@ export const createChannelService: StateCreator<
 
     if (!activeGuildId) return;
 
-    const channel = await invoke<Channel>("create_channel", {
+    await invoke<Channel>("create_channel", {
       guildId: activeGuildId,
       payload
     });
+  },
+  createCategory: async (payload) => {
+    const activeGuildId = get().activeGuildId;
 
-    set((state: AppStore) => ({
-      guilds: state.guilds.map((g) =>
-        g.id === activeGuildId
-          ? { ...g, channels: [...g.channels, channel] }
-          : g
-      )
-    }));
+    if (!activeGuildId) return;
+
+    await invoke<ChannelCategory>("create_category", {
+      guildId: activeGuildId,
+      payload
+    });
   },
   deleteChannel: async (channelId) => {
     console.log("deleteChannel stub", channelId);

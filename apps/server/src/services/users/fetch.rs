@@ -58,7 +58,9 @@ pub async fn get_user_profile(
         username: u.username.clone(),
         display_name: u.display_name.unwrap_or(u.username),
         avatar_url: u.avatar_url,
+        banner_url: u.banner_url,
         bio: u.bio,
+        profile_color: u.profile_color,
     }))
 }
 
@@ -114,7 +116,9 @@ pub async fn get_user_relationships(
                     username: other_user.username.clone(),
                     display_name: other_user.display_name.unwrap_or(other_user.username),
                     avatar_url: other_user.avatar_url,
+                    banner_url: other_user.banner_url,
                     bio: other_user.bio,
+                    profile_color: other_user.profile_color,
                 },
                 presence: UserPresence {
                     status: Status::Offline,
@@ -161,7 +165,9 @@ pub async fn get_me(
             username: user.username,
             display_name,
             avatar_url: user.avatar_url,
+            banner_url: user.banner_url,
             bio: user.bio,
+            profile_color: user.profile_color,
         },
         settings: get_full_user_settings(&user_id, &state.db)
             .await

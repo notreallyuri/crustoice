@@ -35,6 +35,14 @@ pub async fn update_profile(
         user_am.avatar_url = Set(Some(new_avatar_url));
     }
 
+    if let Some(new_banner_url) = payload.banner_url {
+        user_am.banner_url = Set(Some(new_banner_url));
+    }
+
+    if let Some(new_profile_color) = payload.profile_color {
+        user_am.profile_color = Set(Some(new_profile_color));
+    }
+
     user_am
         .update(&state.db)
         .await
